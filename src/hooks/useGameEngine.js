@@ -20,29 +20,88 @@ export const WILDCARDS = [
   { type: "meteor", name: "Meteor Shower", description: "Removes any card from the board", icon: "☄️" }
 ];
 
-// Helper to generate board cells based on level
-function generateGrid(level) {
+// Helper to generate board cells based on level and game progress
+function generateGrid(level, gamesWon = 0) {
   let grid = [];
+  const gameIndex = gamesWon % 3; // 0, 1, 2
+  
   if (level === 1) {
-    // 3x3 Grid (9 playable cells)
-    for (let r = 0; r < 3; r++) {
-      for (let c = 0; c < 3; c++) {
-        grid.push({ id: `cell-${r}-${c}`, row: r, col: c, isBlocked: false, card: null });
+    // 3x3 Grid layouts
+    if (gameIndex === 0) {
+      // 3x3 open
+      for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 3; c++) {
+          grid.push({ id: `cell-${r}-${c}`, row: r, col: c, isBlocked: false, card: null });
+        }
+      }
+    } else if (gameIndex === 1) {
+      // 3x3 with center blocked
+      for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 3; c++) {
+          const isCenter = r === 1 && c === 1;
+          grid.push({ id: `cell-${r}-${c}`, row: r, col: c, isBlocked: isCenter, card: null });
+        }
+      }
+    } else {
+      // 3x3 with top-left and bottom-right blocked
+      for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 3; c++) {
+          const isBlocked = (r === 0 && c === 0) || (r === 2 && c === 2);
+          grid.push({ id: `cell-${r}-${c}`, row: r, col: c, isBlocked, card: null });
+        }
       }
     }
   } else if (level === 2) {
-    // 4x4 Grid (16 playable cells)
-    for (let r = 0; r < 4; r++) {
-      for (let c = 0; c < 4; c++) {
-        grid.push({ id: `cell-${r}-${c}`, row: r, col: c, isBlocked: false, card: null });
+    // 4x4 Grid layouts
+    if (gameIndex === 0) {
+      // 4x4 open
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          grid.push({ id: `cell-${r}-${c}`, row: r, col: c, isBlocked: false, card: null });
+        }
+      }
+    } else if (gameIndex === 1) {
+      // 4x4 diamond corner block
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          const isBlocked = (r === 0 || r === 3) && (c === 0 || c === 3);
+          grid.push({ id: `cell-${r}-${c}`, row: r, col: c, isBlocked, card: null });
+        }
+      }
+    } else {
+      // 4x4 with center 4 blocked
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          const isBlocked = (r === 1 || r === 2) && (c === 1 || c === 2);
+          grid.push({ id: `cell-${r}-${c}`, row: r, col: c, isBlocked, card: null });
+        }
       }
     }
   } else if (level === 3) {
-    // 5x5 Grid with corner blocks (21 playable cells)
-    for (let r = 0; r < 5; r++) {
-      for (let c = 0; c < 5; c++) {
-        const isCorner = (r === 0 || r === 4) && (c === 0 || c === 4);
-        grid.push({ id: `cell-${r}-${c}`, row: r, col: c, isBlocked: isCorner, card: null });
+    // 5x5 Grid layouts
+    if (gameIndex === 0) {
+      // 5x5 corners blocked
+      for (let r = 0; r < 5; r++) {
+        for (let c = 0; c < 5; c++) {
+          const isCorner = (r === 0 || r === 4) && (c === 0 || c === 4);
+          grid.push({ id: `cell-${r}-${c}`, row: r, col: c, isBlocked: isCorner, card: null });
+        }
+      }
+    } else if (gameIndex === 1) {
+      // 5x5 center cross blocked
+      for (let r = 0; r < 5; r++) {
+        for (let c = 0; c < 5; c++) {
+          const isBlocked = r === 2 || c === 2;
+          grid.push({ id: `cell-${r}-${c}`, row: r, col: c, isBlocked, card: null });
+        }
+      }
+    } else {
+      // 5x5 checkerboard pattern
+      for (let r = 0; r < 5; r++) {
+        for (let c = 0; c < 5; c++) {
+          const isBlocked = (r + c) % 2 === 1;
+          grid.push({ id: `cell-${r}-${c}`, row: r, col: c, isBlocked, card: null });
+        }
       }
     }
   }
@@ -109,7 +168,7 @@ export function useGameEngine() {
     soundSynth.playClick();
     
     const newDeck = createDeck();
-    const newGrid = generateGrid(1); // Level 1 board
+    const newGrid = generateGrid(1, 0); // Level 1 board, Game 0
     const pHand = newDeck.splice(0, 3).map(c => ({ ...c, owner: "player" }));
     const aHand = newDeck.splice(0, 3).map(c => ({ ...c, owner: "ai" }));
     
@@ -135,14 +194,16 @@ export function useGameEngine() {
     soundSynth.playClick();
     
     let nextLevel = level;
+    let nextGamesWon = gamesWon;
     if (gamesWon >= 3) {
       nextLevel = level + 1;
       setLevel(nextLevel);
       setGamesWon(0);
+      nextGamesWon = 0;
     }
     
     const newDeck = createDeck();
-    const newGrid = generateGrid(nextLevel); // Use calculated level
+    const newGrid = generateGrid(nextLevel, nextGamesWon); // Use calculated level and progress
     const pHand = newDeck.splice(0, 3).map(c => ({ ...c, owner: "player" }));
     const aHand = newDeck.splice(0, 3).map(c => ({ ...c, owner: "ai" }));
     

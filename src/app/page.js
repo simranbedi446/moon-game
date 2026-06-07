@@ -189,6 +189,45 @@ export default function Home() {
     );
   };
 
+  const getCellCenter = (row, col) => {
+    const N = level === 1 ? 3 : level === 2 ? 4 : 5;
+    return {
+      x: ((col + 0.5) / N) * 100,
+      y: ((row + 0.5) / N) * 100
+    };
+  };
+
+  const getBoardLinks = () => {
+    let links = [];
+    const N = level === 1 ? 3 : level === 2 ? 4 : 5;
+    
+    // Create a 2D map of cells for quick lookup
+    const cellMap = {};
+    board.forEach(cell => {
+      cellMap[`${cell.row}-${cell.col}`] = cell;
+    });
+
+    for (let r = 0; r < N; r++) {
+      for (let c = 0; c < N; c++) {
+        const current = cellMap[`${r}-${c}`];
+        if (!current || current.isBlocked) continue;
+
+        // Check horizontal neighbor (right)
+        const right = cellMap[`${r}-${c + 1}`];
+        if (right && !right.isBlocked) {
+          links.push({ cellA: current, cellB: right });
+        }
+
+        // Check vertical neighbor (down)
+        const down = cellMap[`${r + 1}-${c}`];
+        if (down && !down.isBlocked) {
+          links.push({ cellA: current, cellB: down });
+        }
+      }
+    }
+    return links;
+  };
+
   const [hoveredCellId, setHoveredCellId] = useState(null);
 
   // Drag and Drop handlers
@@ -414,6 +453,38 @@ export default function Home() {
 
                 {/* Grid Dynamic Rendering */}
                 <div className={`board-grid grid-level-${level}`}>
+                   {/* Visual connection lines overlay */}
+                   <svg className="connection-lines-svg">
+                     {getBoardLinks().map((link, idx) => {
+                       const posA = getCellCenter(link.cellA.row, link.cellA.col);
+                       const posB = getCellCenter(link.cellB.row, link.cellB.col);
+                       
+                       // Find if this link is part of an active combo
+                       const activeCombo = recentCombos.find(combo => 
+                         combo.cells.includes(link.cellA.id) && combo.cells.includes(link.cellB.id)
+                       );
+                       const isLinked = !!activeCombo;
+                       
+                       // Determine whose link it is (player or AI) to set colors
+                       let ownerClass = "";
+                       if (isLinked) {
+                         const owner = link.cellA.card?.owner || link.cellB.card?.owner;
+                         if (owner === "ai") ownerClass = "ai-link";
+                       }
+
+                       return (
+                         <line
+                           key={`link-${idx}`}
+                           x1={`${posA.x}%`}
+                           y1={`${posA.y}%`}
+                           x2={`${posB.x}%`}
+                           y2={`${posB.y}%`}
+                           className={`connection-line ${isLinked ? "linked" : ""} ${ownerClass}`}
+                         />
+                       );
+                     })}
+                   </svg>
+
                   {board.map((cell) => {
                     if (cell.isBlocked) {
                       return (

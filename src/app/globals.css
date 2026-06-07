@@ -7,13 +7,13 @@
   --bg-panel: rgba(22, 24, 47, 0.45);
   --border-light: rgba(255, 255, 255, 0.08);
   
-  --player-color: #f9e2af;
-  --player-glow: rgba(249, 226, 175, 0.35);
-  --ai-color: #cba6f7;
-  --ai-glow: rgba(203, 166, 247, 0.35);
+  --player-color: #ffffff;
+  --player-glow: rgba(255, 255, 255, 0.55);
+  --ai-color: #7f849c;
+  --ai-glow: rgba(127, 132, 156, 0.45);
   
-  --gold-foil: linear-gradient(135deg, #ffe082 0%, #b2943e 50%, #ffe082 100%);
-  --purple-foil: linear-gradient(135deg, #e8d5ff 0%, #7e57c2 50%, #e8d5ff 100%);
+  --gold-foil: linear-gradient(135deg, #ffffff 0%, #a6adc8 50%, #ffffff 100%);
+  --purple-foil: linear-gradient(135deg, #bac2de 0%, #585b70 50%, #bac2de 100%);
   
   --text-primary: #f8f9fa;
   --text-secondary: #a0aec0;
@@ -1302,5 +1302,39 @@ body, html {
 @keyframes victory-appear {
   0% { transform: scale(0.9) translateY(20px); opacity: 0; }
   100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* Board Connection Lines */
+.connection-lines-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0; /* Behind placed card rendering but in front of backgrounds */
+  pointer-events: none;
+}
+
+.connection-line {
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 2.5;
+  transition: all 0.35s ease;
+}
+
+.connection-line.linked {
+  stroke: #ffffff;
+  stroke-width: 5;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.9));
+  animation: line-pulse 1.2s infinite alternate;
+}
+
+.connection-line.linked.ai-link {
+  stroke: #7f849c;
+  filter: drop-shadow(0 0 10px rgba(127, 132, 156, 0.9));
+}
+
+@keyframes line-pulse {
+  from { stroke-width: 4px; opacity: 0.85; }
+  to { stroke-width: 6.5px; opacity: 1; }
 }
 
