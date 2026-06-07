@@ -92,6 +92,7 @@ export function useGameEngine() {
   const [muteSound, setMuteSound] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const aiTurnInProgress = useRef(false);
+  const [gamesWon, setGamesWon] = useState(0); // number of games won in current level (0, 1, 2)
 
   // Sound toggling
   const handleToggleMute = useCallback(() => {
@@ -99,16 +100,16 @@ export function useGameEngine() {
     setMuteSound(isMuted);
   }, []);
 
-  // Initialize a new round/level
-  const startLevel = useCallback((selectedLevel) => {
+  // Start the entire game progression from Level 1, Game 1
+  const startNewLevelProgression = useCallback(() => {
+    setLevel(1);
+    setGamesWon(0);
+    setPlayerWilds(["equinox"]);
     soundSynth.resume();
     soundSynth.playClick();
     
-    setLevel(selectedLevel);
     const newDeck = createDeck();
-    const newGrid = generateGrid(selectedLevel);
-    
-    // Draw 3 cards each
+    const newGrid = generateGrid(1); // Level 1 board
     const pHand = newDeck.splice(0, 3).map(c => ({ ...c, owner: "player" }));
     const aHand = newDeck.splice(0, 3).map(c => ({ ...c, owner: "ai" }));
     
@@ -128,17 +129,44 @@ export function useGameEngine() {
     soundSynth.startAmbient();
   }, []);
 
+  // Start next game in current level progression
+  const startNextGame = useCallback(() => {
+    soundSynth.resume();
+    soundSynth.playClick();
+    
+    let nextLevel = level;
+    if (gamesWon >= 3) {
+      nextLevel = level + 1;
+      setLevel(nextLevel);
+      setGamesWon(0);
+    }
+    
+    const newDeck = createDeck();
+    const newGrid = generateGrid(nextLevel); // Use calculated level
+    const pHand = newDeck.splice(0, 3).map(c => ({ ...c, owner: "player" }));
+    const aHand = newDeck.splice(0, 3).map(c => ({ ...c, owner: "ai" }));
+    
+    setDeck(newDeck);
+    setBoard(newGrid);
+    setPlayerHand(pHand);
+    setAiHand(aHand);
+    setPlayerScore(0);
+    setAiScore(0);
+    setTurn("player");
+    setSelectedHandCard(null);
+    setRecentCombos([]);
+    setAiFace("sleeping");
+    setActiveWildEffect(null);
+    setGameStage("playing");
+
+    soundSynth.startAmbient();
+  }, [level, gamesWon]);
+
   // Go to main menu
   const goToMenu = useCallback(() => {
     soundSynth.playClick();
     setGameStage("menu");
     soundSynth.stopAmbient();
-  }, []);
-
-  // Go to level select
-  const goToLevelSelect = useCallback(() => {
-    soundSynth.playClick();
-    setGameStage("level-select");
   }, []);
 
   // Go to tutorial
@@ -516,14 +544,29 @@ export function useGameEngine() {
         soundSynth.playWin();
         setAiFace("sad");
         
-        // Grant a random wildcard on winning a level
+        // Grant a random wildcard on winning a game
         const randomWild = WILDCARDS[Math.floor(Math.random() * WILDCARDS.length)];
         setPlayerWilds(prev => [...prev, randomWild.type]);
+
+        // 3 wins to progress to next level
+        if (gamesWon + 1 >= 3) {
+          if (level === 3) {
+            // Beat the entire game!
+            setGameStage("game-victory");
+          } else {
+            // Completed current level
+            setGamesWon(3);
+            setGameStage("round-end");
+          }
+        } else {
+          setGamesWon(prev => prev + 1);
+          setGameStage("round-end");
+        }
       } else {
         soundSynth.playLose();
         setAiFace("happy");
+        setGameStage("round-end");
       }
-      setGameStage("round-end");
     }, 800);
   };
 
@@ -729,10 +772,11 @@ export function useGameEngine() {
     activeWildEffect,
     muteSound,
     isAnimating,
+    gamesWon,
     setSelectedHandCard,
-    startLevel,
+    startNewLevelProgression,
+    startNextGame,
     goToMenu,
-    goToLevelSelect,
     goToTutorial,
     handlePlayWildcard,
     handleCellClick,

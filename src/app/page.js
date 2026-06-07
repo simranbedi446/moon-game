@@ -4,6 +4,12 @@ import React, { useEffect, useState } from "react";
 import { useGameEngine, PHASES, WILDCARDS } from "../hooks/useGameEngine";
 import soundSynth from "../utils/soundSynth";
 
+const orbitNames = {
+  1: "Orbit I: Crescent",
+  2: "Orbit II: Gibbous",
+  3: "Orbit III: Eclipse"
+};
+
 // High-fidelity SVG Moon Phase renderer
 function MoonSvg({ phaseId, size = 60, glowColor = "rgba(249, 226, 175, 0.4)" }) {
   const r = 18;
@@ -159,15 +165,29 @@ export default function Home() {
     activeWildEffect,
     muteSound,
     isAnimating,
+    gamesWon,
     setSelectedHandCard,
-    startLevel,
+    startNewLevelProgression,
+    startNextGame,
     goToMenu,
-    goToLevelSelect,
     goToTutorial,
     handlePlayWildcard,
     handleCellClick,
     handleToggleMute
   } = useGameEngine();
+
+  const renderProgressDots = (count) => {
+    return (
+      <div className="progress-dots" title={`${count} of 3 games won at this level`}>
+        {[1, 2, 3].map((dotIndex) => (
+          <span 
+            key={dotIndex} 
+            className={`progress-dot ${dotIndex <= count ? "filled" : ""}`}
+          />
+        ))}
+      </div>
+    );
+  };
 
   const [hoveredCellId, setHoveredCellId] = useState(null);
 
@@ -267,7 +287,7 @@ export default function Home() {
               Strategically place lunar phases, align cosmic cycles, outsmart the Half Moon AI, and command wildcards.
             </p>
             <div className="menu-actions">
-              <button className="primary-btn glow-gold-btn" onClick={goToLevelSelect}>
+              <button className="primary-btn glow-gold-btn" onClick={startNewLevelProgression}>
                 <span>Enter Orbit (Play)</span>
               </button>
               <button className="secondary-btn" onClick={goToTutorial}>
@@ -346,33 +366,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* STAGE: LEVEL SELECT */}
-        {gameStage === "level-select" && (
-          <div className="level-select-view glass-panel">
-            <h2>Select Lunar Orbit</h2>
-            <p className="select-desc">Each level introduces a different board shape and blocking patterns.</p>
-            <div className="orbit-map">
-              <div className="level-node" onClick={() => startLevel(1)}>
-                <div className="node-icon">🌑</div>
-                <h3>Orbit I: Crescent</h3>
-                <span className="difficulty-tag easy">Easy (3x3 Grid)</span>
-              </div>
-              <div className="level-node" onClick={() => startLevel(2)}>
-                <div className="node-icon">🌗</div>
-                <h3>Orbit II: Gibbous</h3>
-                <span className="difficulty-tag medium">Medium (4x4 Grid)</span>
-              </div>
-              <div className="level-node" onClick={() => startLevel(3)}>
-                <div className="node-icon">🌕</div>
-                <h3>Orbit III: Eclipse</h3>
-                <span className="difficulty-tag hard">Hard (5x5, Corners Blocked)</span>
-              </div>
-            </div>
-            <button className="secondary-btn mt-6" onClick={goToMenu}>
-              Back to Menu
-            </button>
-          </div>
-        )}
+
 
         {/* STAGE: PLAYING */}
         {gameStage === "playing" && (
@@ -399,6 +393,11 @@ export default function Home() {
 
               {/* Board Center Container */}
               <div className="board-center">
+                <div className="orbit-header-panel">
+                  <span className="orbit-name">{orbitNames[level] || `Orbit ${level}`}</span>
+                  {renderProgressDots(gamesWon)}
+                </div>
+
                 {/* Active Wildcard Notice banner */}
                 {activeWildEffect && (
                   <div className={`wild-banner ${activeWildEffect}`}>
@@ -557,7 +556,7 @@ export default function Home() {
             {playerScore >= aiScore ? (
               <div className="victory-badge">
                 <span className="crown">👑</span>
-                <h2>VICTORY!</h2>
+                <h2>{gamesWon === 3 ? "ORBIT COMPLETED!" : "ROUND WON!"}</h2>
               </div>
             ) : (
               <div className="defeat-badge">
@@ -570,8 +569,8 @@ export default function Home() {
               <h3>Orbit Alignment Summary</h3>
               <div className="breakdown-table">
                 <div className="table-row">
-                  <span>Level Completed:</span>
-                  <strong>Orbit {level}</strong>
+                  <span>Current Orbit:</span>
+                  <strong>{orbitNames[level]}</strong>
                 </div>
                 <div className="table-row">
                   <span>Your Final Score:</span>
@@ -580,6 +579,10 @@ export default function Home() {
                 <div className="table-row">
                   <span>Half Moon Score:</span>
                   <strong className="ai-text">{aiScore} pts</strong>
+                </div>
+                <div className="table-row progression-row">
+                  <span>Orbit Progress:</span>
+                  {renderProgressDots(gamesWon)}
                 </div>
               </div>
               
@@ -595,22 +598,50 @@ export default function Home() {
 
             <div className="round-end-actions">
               {playerScore >= aiScore ? (
-                <button
-                  className="primary-btn glow-gold-btn"
-                  onClick={() => startLevel(level < 3 ? level + 1 : 1)}
-                >
-                  {level < 3 ? "Next Orbit" : "Play Orbit I Again"}
+                <button className="primary-btn glow-gold-btn" onClick={startNextGame}>
+                  {gamesWon === 3 ? "Advance to Next Orbit" : "Next Game"}
                 </button>
               ) : (
-                <button className="primary-btn glow-gold-btn" onClick={() => startLevel(level)}>
-                  Retry Orbit
+                <button className="primary-btn glow-gold-btn" onClick={startNextGame}>
+                  Retry Game
                 </button>
               )}
-              <button className="secondary-btn" onClick={goToLevelSelect}>
-                Select Levels
-              </button>
               <button className="secondary-btn" onClick={goToMenu}>
                 Main Menu
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* STAGE: GAME VICTORY */}
+        {gameStage === "game-victory" && (
+          <div className="game-victory-view glass-panel animate-fade-in">
+            <div className="victory-badge">
+              <span className="trophy">🏆</span>
+              <h2>CAMPAIGN COMPLETED!</h2>
+            </div>
+            <p className="victory-tagline">
+              You have outsmarted the Half Moon, aligned all three lunar orbits, and restored cosmic balance!
+            </p>
+            <div className="victory-summary">
+              <h3>Final Campaign Standings</h3>
+              <div className="breakdown-table">
+                <div className="table-row">
+                  <span>Your Score:</span>
+                  <strong className="player-text">{playerScore} pts</strong>
+                </div>
+                <div className="table-row">
+                  <span>Half Moon Score:</span>
+                  <strong className="ai-text">{aiScore} pts</strong>
+                </div>
+              </div>
+            </div>
+            <div className="victory-actions">
+              <button className="primary-btn glow-gold-btn" onClick={startNewLevelProgression}>
+                <span>Play Campaign Again</span>
+              </button>
+              <button className="secondary-btn" onClick={goToMenu}>
+                <span>Return to Menu</span>
               </button>
             </div>
           </div>
