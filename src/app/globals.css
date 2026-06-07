@@ -984,6 +984,14 @@ body, html {
   color: var(--text-secondary);
 }
 
+.total-row {
+  margin-top: 0.5rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.15);
+  padding-top: 0.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
 .player-text {
   color: var(--player-color);
 }

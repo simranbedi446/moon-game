@@ -152,6 +152,8 @@ export function useGameEngine() {
   const [isAnimating, setIsAnimating] = useState(false);
   const aiTurnInProgress = useRef(false);
   const [gamesWon, setGamesWon] = useState(0); // number of games won in current level (0, 1, 2)
+  const [playerBonus, setPlayerBonus] = useState(0);
+  const [aiBonus, setAiBonus] = useState(0);
 
   // Sound toggling
   const handleToggleMute = useCallback(() => {
@@ -163,6 +165,8 @@ export function useGameEngine() {
   const startNewLevelProgression = useCallback(() => {
     setLevel(1);
     setGamesWon(0);
+    setPlayerBonus(0);
+    setAiBonus(0);
     setPlayerWilds(["equinox"]);
     soundSynth.resume();
     soundSynth.playClick();
@@ -195,6 +199,8 @@ export function useGameEngine() {
     
     let nextLevel = level;
     let nextGamesWon = gamesWon;
+    setPlayerBonus(0);
+    setAiBonus(0);
     if (gamesWon >= 3) {
       nextLevel = level + 1;
       setLevel(nextLevel);
@@ -606,6 +612,8 @@ export function useGameEngine() {
     const finalPlayerScore = playerScore + playerBoardPoints;
     const finalAiScore = aiScore + aiBoardPoints;
 
+    setPlayerBonus(playerBoardPoints);
+    setAiBonus(aiBoardPoints);
     setPlayerScore(finalPlayerScore);
     setAiScore(finalAiScore);
 
@@ -846,6 +854,8 @@ export function useGameEngine() {
     muteSound,
     isAnimating,
     gamesWon,
+    playerBonus,
+    aiBonus,
     setSelectedHandCard,
     startNewLevelProgression,
     startNextGame,

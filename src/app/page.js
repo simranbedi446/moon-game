@@ -166,6 +166,8 @@ export default function Home() {
     muteSound,
     isAnimating,
     gamesWon,
+    playerBonus,
+    aiBonus,
     setSelectedHandCard,
     startNewLevelProgression,
     startNextGame,
@@ -698,12 +700,25 @@ export default function Home() {
                   <strong>{orbitNames[level]}</strong>
                 </div>
                 <div className="table-row">
-                  <span>Your Final Score:</span>
-                  <strong className="player-text">{playerScore} pts</strong>
+                  <span>Combo Alignments:</span>
+                  <strong>
+                    <span className="player-text">{playerScore - playerBonus}</span> vs{" "}
+                    <span className="ai-text">{aiScore - aiBonus}</span>
+                  </strong>
                 </div>
                 <div className="table-row">
-                  <span>Half Moon Score:</span>
-                  <strong className="ai-text">{aiScore} pts</strong>
+                  <span>Board Card Bonus:</span>
+                  <strong>
+                    <span className="player-text">+{playerBonus}</span> vs{" "}
+                    <span className="ai-text">+{aiBonus}</span>
+                  </strong>
+                </div>
+                <div className="table-row total-row">
+                  <span>Final Scores:</span>
+                  <strong>
+                    <span className="player-text">{playerScore} pts</span> vs{" "}
+                    <span className="ai-text">{aiScore} pts</span>
+                  </strong>
                 </div>
                 <div className="table-row progression-row">
                   <span>Orbit Progress:</span>
