@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useGameEngine, PHASES, WILDCARDS } from "../hooks/useGameEngine";
 import soundSynth from "../utils/soundSynth";
 
@@ -158,6 +158,7 @@ export default function Home() {
     aiFace,
     activeWildEffect,
     muteSound,
+    isAnimating,
     setSelectedHandCard,
     startLevel,
     goToMenu,
@@ -167,6 +168,29 @@ export default function Home() {
     handleCellClick,
     handleToggleMute
   } = useGameEngine();
+
+  const [hoveredCellId, setHoveredCellId] = useState(null);
+
+  // Drag and Drop handlers
+  const handleDragStart = (e, card) => {
+    if (turn !== "player" || isAnimating) {
+      e.preventDefault();
+      return;
+    }
+    setSelectedHandCard(card);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragEnd = () => {
+    setSelectedHandCard(null);
+  };
+
+  const handleDropOnCell = (e, cellId) => {
+    e.preventDefault();
+    setHoveredCellId(null);
+    if (turn !== "player" || isAnimating) return;
+    handleCellClick(cellId, selectedHandCard);
+  };
 
   // Helper to check if a cell is highlighted in the current combo
   const isCellInCombo = (cellId) => {
@@ -388,13 +412,32 @@ export default function Home() {
                         </div>
                       );
                     }
+                    const hasGhost = !cell.card && selectedHandCard && hoveredCellId === cell.id && turn === "player";
                     return (
                       <div
                         key={cell.id}
                         onClick={() => handleCellClick(cell.id)}
+                        onDragOver={(e) => {
+                          if (turn === "player" && !cell.card && !cell.isBlocked) {
+                            e.preventDefault();
+                          }
+                        }}
+                        onDragEnter={() => {
+                          if (turn === "player" && !cell.card && !cell.isBlocked) {
+                            setHoveredCellId(cell.id);
+                          }
+                        }}
+                        onDragLeave={() => setHoveredCellId(null)}
+                        onDrop={(e) => handleDropOnCell(e, cell.id)}
+                        onMouseEnter={() => {
+                          if (turn === "player" && !cell.card && !cell.isBlocked) {
+                            setHoveredCellId(cell.id);
+                          }
+                        }}
+                        onMouseLeave={() => setHoveredCellId(null)}
                         className={`board-cell cell-playable ${cell.card ? "has-card" : "cell-empty"} ${
                           isCellInCombo(cell.id) ? "combo-highlight" : ""
-                        }`}
+                        } ${cell.isFlipping ? "flip-anim" : ""}`}
                       >
                         {cell.card ? (
                           <div className={`placed-card owner-${cell.card.owner}`}>
@@ -404,6 +447,11 @@ export default function Home() {
                             <MoonSvg phaseId={cell.card.phase} size={40} />
                             <span className="placed-card-name">{cell.card.name}</span>
                             <div className="card-glow-overlay"></div>
+                          </div>
+                        ) : hasGhost ? (
+                          <div className="ghost-card">
+                            <MoonSvg phaseId={selectedHandCard.phase} size={30} />
+                            <span className="ghost-label">{selectedHandCard.name}</span>
                           </div>
                         ) : (
                           <div className="empty-indicator">
@@ -436,13 +484,16 @@ export default function Home() {
                     return (
                       <div
                         key={card.id}
+                        draggable={turn === "player" && !isAnimating}
+                        onDragStart={(e) => handleDragStart(e, card)}
+                        onDragEnd={handleDragEnd}
                         onClick={() => {
-                          if (turn === "player") {
+                          if (turn === "player" && !isAnimating) {
                             setSelectedHandCard(isSelected ? null : card);
                             soundSynth.playHover();
                           }
                         }}
-                        className={`tarot-card ${isSelected ? "selected-glow" : ""}`}
+                        className={`tarot-card ${isSelected ? "selected-glow" : ""} ${isAnimating ? "disabled-interact" : ""}`}
                       >
                         <div className="card-stars">✨</div>
                         <div className="card-header-idx">{card.phase + 1} / 8</div>
@@ -467,8 +518,8 @@ export default function Home() {
                       return (
                         <div
                           key={`${wildType}-${idx}`}
-                          className="wild-card-btn"
-                          onClick={() => handlePlayWildcard(wildType)}
+                          className={`wild-card-btn ${isAnimating ? "disabled-interact" : ""}`}
+                          onClick={() => { if (!isAnimating) handlePlayWildcard(wildType); }}
                           title={wildMeta.description}
                         >
                           <span className="wild-icon">{wildMeta.icon}</span>

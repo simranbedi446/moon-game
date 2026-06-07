@@ -1119,3 +1119,44 @@ body, html {
     font-size: 0.6rem;
   }
 }
+
+/* Card Dragging, 3D Flip, & Ghost Preview Styles */
+.ghost-card {
+  opacity: 0.45;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transform: scale(0.9);
+  transition: all 0.2s ease;
+}
+
+.ghost-label {
+  font-size: 0.65rem;
+  opacity: 0.8;
+  margin-top: 4px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 90%;
+}
+
+.flip-anim {
+  animation: card-flip-3d 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes card-flip-3d {
+  0% { transform: perspective(800px) rotateY(0deg); }
+  50% { transform: perspective(800px) rotateY(90deg); filter: brightness(1.5); }
+  100% { transform: perspective(800px) rotateY(0deg); }
+}
+
+.disabled-interact {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+}

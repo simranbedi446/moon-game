@@ -94,6 +94,7 @@ export function useGameEngine() {
   const [aiFace, setAiFace] = useState("sleeping"); // neutral, happy, sad, shocked, thinking, sleeping
   const [activeWildEffect, setActiveWildEffect] = useState(null); // tracking active wildcard placement (e.g. meteor)
   const [muteSound, setMuteSound] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   // Sound toggling
   const handleToggleMute = useCallback(() => {
@@ -378,47 +379,20 @@ export function useGameEngine() {
 
     // Apply move after a simulated thinking delay
     setTimeout(() => {
-      setBoard(prevBoard => {
-        const cardToPlace = currentAiHand[chosenMove.handCardIndex];
-        let nextBoard = prevBoard.map(c => {
-          if (c.id === chosenMove.cellId) {
-            return { ...c, card: { ...cardToPlace, owner: "ai" } };
-          }
-          return c;
-        });
+      const cardToPlace = currentAiHand[chosenMove.handCardIndex];
+      const targetCell = currentBoard.find(c => c.id === chosenMove.cellId);
 
-        // Evaluate actual combos formed
-        const targetCell = nextBoard.find(c => c.id === chosenMove.cellId);
-        const { combos, score: scoreGained, cardsToFlip } = evaluateBoardCombos(nextBoard, targetCell.row, targetCell.col, "ai");
+      setIsAnimating(true);
 
-        // Flip owned cards
-        if (cardsToFlip.length > 0) {
-          nextBoard = nextBoard.map(c => {
-            if (cardsToFlip.includes(c.id) && c.card) {
-              return { ...c, card: { ...c.card, owner: "ai" } };
-            }
-            return c;
-          });
+      // 1. Place the card immediately
+      setBoard(prevBoard => prevBoard.map(c => {
+        if (c.id === chosenMove.cellId) {
+          return { ...c, card: { ...cardToPlace, owner: "ai" } };
         }
+        return c;
+      }));
 
-        // Apply scoring and sounds
-        if (scoreGained > 0) {
-          setAiScore(prev => prev + scoreGained);
-          setRecentCombos(combos);
-          setAiFace("happy");
-          soundSynth.playScore();
-          
-          // Clear combo layout styling after 1.5s
-          setTimeout(() => setRecentCombos([]), 1500);
-        } else {
-          setAiFace("neutral");
-          soundSynth.playClick();
-        }
-
-        return nextBoard;
-      });
-
-      // Update AI Hand and draw card if deck has remaining
+      // Remove card from AI hand
       setAiHand(prevHand => {
         const nextHand = prevHand.filter((_, idx) => idx !== chosenMove.handCardIndex);
         let nextDeck = [...currentDeck];
@@ -430,8 +404,62 @@ export function useGameEngine() {
         return nextHand;
       });
 
-      // Switch turn back to player
-      setTurn("player");
+      // 2. Evaluate combos on simulated board state
+      const nextBoardState = currentBoard.map(c => {
+        if (c.id === chosenMove.cellId) {
+          return { ...c, card: { ...cardToPlace, owner: "ai" } };
+        }
+        return c;
+      });
+      const { combos, score: scoreGained, cardsToFlip } = evaluateBoardCombos(nextBoardState, targetCell.row, targetCell.col, "ai");
+
+      if (scoreGained > 0) {
+        // Highlight combos immediately
+        setRecentCombos(combos);
+        setAiFace("happy");
+
+        // Flip after 500ms
+        setTimeout(() => {
+          setBoard(prev => prev.map(c => {
+            if (cardsToFlip.includes(c.id) && c.card) {
+              return { 
+                ...c, 
+                card: { ...c.card, owner: "ai" },
+                isFlipping: true
+              };
+            }
+            return c;
+          }));
+          soundSynth.playFlip();
+
+          setTimeout(() => {
+            setBoard(prev => prev.map(c => c.isFlipping ? { ...c, isFlipping: false } : c));
+          }, 600);
+        }, 500);
+
+        // Add score after 1100ms
+        setTimeout(() => {
+          setAiScore(prev => prev + scoreGained);
+          soundSynth.playScore();
+        }, 1100);
+
+        // Clean highlights and hand turn back to player after 1800ms
+        setTimeout(() => {
+          setRecentCombos([]);
+          setAiFace("neutral");
+          setIsAnimating(false);
+          setTurn("player");
+        }, 1800);
+
+      } else {
+        // No combos
+        soundSynth.playClick();
+        setAiFace("neutral");
+        setTimeout(() => {
+          setIsAnimating(false);
+          setTurn("player");
+        }, 800);
+      }
     }, 1200); // 1.2s thinking time
   }, [evaluateBoardCombos]);
 
@@ -495,7 +523,7 @@ export function useGameEngine() {
 
   // Play a wildcard
   const handlePlayWildcard = (wildType) => {
-    if (turn !== "player" || gameStage !== "playing") return;
+    if (turn !== "player" || gameStage !== "playing" || isAnimating) return;
 
     soundSynth.playClick();
 
@@ -542,97 +570,141 @@ export function useGameEngine() {
     }
   };
 
-  // Click handler for board cells
-  const handleCellClick = (cellId) => {
-    if (turn !== "player" || gameStage !== "playing") return;
+  // Click handler for board cells (supports click-to-place and drop events)
+  const handleCellClick = (cellId, cardToPlay = null) => {
+    if (turn !== "player" || gameStage !== "playing" || isAnimating) return;
+
+    const card = cardToPlay || selectedHandCard;
 
     // Handle Meteor wildcard effect (remove clicked card)
     if (activeWildEffect === "meteor") {
       const targetCell = board.find(c => c.id === cellId);
       if (targetCell && targetCell.card) {
+        setIsAnimating(true);
         soundSynth.playFlip();
         setBoard(prev => prev.map(c => c.id === cellId ? { ...c, card: null } : c));
         setActiveWildEffect(null);
-        // Turn stays with player, meteor does not cost a turn!
+        setTimeout(() => setIsAnimating(false), 500);
         return;
       }
     }
 
-    if (!selectedHandCard || selectedHandCard.isWildcard) return;
+    if (!card || card.isWildcard) return;
 
     const targetCell = board.find(c => c.id === cellId);
     // Cell must not be blocked and must be empty
     if (!targetCell || targetCell.isBlocked || targetCell.card) return;
 
-    // Play card on board
-    setBoard(prevBoard => {
-      let nextBoard = prevBoard.map(c => {
-        if (c.id === cellId) {
-          return { ...c, card: { ...selectedHandCard, owner: "player" } };
-        }
-        return c;
-      });
+    setIsAnimating(true);
+    soundSynth.playClick();
 
-      // Special Solar Eclipse Wildcard effect (flip all adjacent cards to player color)
-      if (activeWildEffect === "eclipse") {
-        const directions = [
-          { r: -1, c: 0 }, { r: 1, c: 0 }, { r: 0, c: -1 }, { r: 0, c: 1 }
-        ];
-        directions.forEach(dir => {
-          const adj = nextBoard.find(bc => bc.row === targetCell.row + dir.r && bc.col === targetCell.col + dir.c && !bc.isBlocked);
-          if (adj && adj.card) {
-            adj.card.owner = "player";
-          }
-        });
-        soundSynth.playFlip();
+    // 1. Place card immediately on board
+    setBoard(prevBoard => prevBoard.map(c => {
+      if (c.id === cellId) {
+        return { ...c, card: { ...card, owner: "player" } };
       }
-
-      // Evaluate combos
-      const isSupermoon = activeWildEffect === "supermoon";
-      const { combos, score: scoreGained, cardsToFlip } = evaluateBoardCombos(nextBoard, targetCell.row, targetCell.col, "player", isSupermoon);
-
-      // Flip cards in combo to player ownership
-      if (cardsToFlip.length > 0) {
-        nextBoard = nextBoard.map(c => {
-          if (cardsToFlip.includes(c.id) && c.card) {
-            return { ...c, card: { ...c.card, owner: "player" } };
-          }
-          return c;
-        });
-      }
-
-      // Add scores and trigger chimes
-      if (scoreGained > 0) {
-        setPlayerScore(prev => prev + scoreGained);
-        setRecentCombos(combos);
-        soundSynth.playScore();
-
-        // Clear matches after 1.5s
-        setTimeout(() => setRecentCombos([]), 1500);
-      } else {
-        soundSynth.playClick();
-      }
-
-      return nextBoard;
-    });
+      return c;
+    }));
 
     // Remove from player hand and draw new one
     setPlayerHand(prevHand => {
-      const nextHand = prevHand.filter(c => c.id !== selectedHandCard.id);
+      const nextHand = prevHand.filter(c => c.id !== card.id);
       let nextDeck = [...deck];
       if (nextDeck.length > 0) {
         const newCard = { ...nextDeck.shift(), owner: "player" };
         setDeck(nextDeck);
-        soundSynth.playDraw();
+        setTimeout(() => soundSynth.playDraw(), 300);
         return [...nextHand, newCard];
       }
       return nextHand;
     });
 
-    // Reset temporary states and swap turn to AI
-    setSelectedHandCard(null);
-    setActiveWildEffect(null);
-    setTurn("ai");
+    // 2. Evaluate combos on simulated board state
+    const nextBoardState = board.map(c => {
+      if (c.id === cellId) {
+        return { ...c, card: { ...card, owner: "player" } };
+      }
+      return c;
+    });
+
+    // Special Solar Eclipse Wildcard effect (flip all adjacent cards to player color)
+    if (activeWildEffect === "eclipse") {
+      const directions = [
+        { r: -1, c: 0 }, { r: 1, c: 0 }, { r: 0, c: -1 }, { r: 0, c: 1 }
+      ];
+      directions.forEach(dir => {
+        const adj = nextBoardState.find(bc => bc.row === targetCell.row + dir.r && bc.col === targetCell.col + dir.c && !bc.isBlocked);
+        if (adj && adj.card) {
+          adj.card.owner = "player";
+        }
+      });
+    }
+
+    const isSupermoon = activeWildEffect === "supermoon";
+    const { combos, score: scoreGained, cardsToFlip } = evaluateBoardCombos(nextBoardState, targetCell.row, targetCell.col, "player", isSupermoon);
+
+    if (scoreGained > 0) {
+      // Step A: Highlight combos immediately
+      setRecentCombos(combos);
+
+      // Step B: Flip cards after 500ms
+      setTimeout(() => {
+        setBoard(prev => prev.map(c => {
+          if (cardsToFlip.includes(c.id) && c.card) {
+            return { 
+              ...c, 
+              card: { ...c.card, owner: "player" },
+              isFlipping: true
+            };
+          }
+          return c;
+        }));
+        soundSynth.playFlip();
+
+        // Clear flipping animation state
+        setTimeout(() => {
+          setBoard(prev => prev.map(c => c.isFlipping ? { ...c, isFlipping: false } : c));
+        }, 600);
+      }, 500);
+
+      // Step C: Score and play chime after 1100ms
+      setTimeout(() => {
+        setPlayerScore(prev => prev + scoreGained);
+        soundSynth.playScore();
+      }, 1100);
+
+      // Step D: Hand turn to AI after 1800ms
+      setTimeout(() => {
+        setRecentCombos([]);
+        setSelectedHandCard(null);
+        setActiveWildEffect(null);
+        setIsAnimating(false);
+        setTurn("ai");
+      }, 1800);
+
+    } else {
+      // No combos: simple place card
+      if (activeWildEffect === "eclipse") {
+        setBoard(prev => prev.map(c => {
+          const isAdj = Math.abs(c.row - targetCell.row) + Math.abs(c.col - targetCell.col) === 1;
+          if (isAdj && !c.isBlocked && c.card && c.card.owner !== "player") {
+            return { ...c, card: { ...c.card, owner: "player" }, isFlipping: true };
+          }
+          return c;
+        }));
+        soundSynth.playFlip();
+        setTimeout(() => {
+          setBoard(prev => prev.map(c => c.isFlipping ? { ...c, isFlipping: false } : c));
+        }, 600);
+      }
+
+      setTimeout(() => {
+        setSelectedHandCard(null);
+        setActiveWildEffect(null);
+        setIsAnimating(false);
+        setTurn("ai");
+      }, 800);
+    }
   };
 
   return {
@@ -650,6 +722,7 @@ export function useGameEngine() {
     aiFace,
     activeWildEffect,
     muteSound,
+    isAnimating,
     setSelectedHandCard,
     startLevel,
     goToMenu,
