@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import soundSynth from "../utils/soundSynth";
 
 // Lunar Phases metadata
@@ -95,6 +95,7 @@ export function useGameEngine() {
   const [activeWildEffect, setActiveWildEffect] = useState(null); // tracking active wildcard placement (e.g. meteor)
   const [muteSound, setMuteSound] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const aiTurnInProgress = useRef(false);
 
   // Sound toggling
   const handleToggleMute = useCallback(() => {
@@ -296,6 +297,9 @@ export function useGameEngine() {
 
   // Execute AI turn
   const runAiTurn = useCallback((currentBoard, currentDeck, currentAiHand, currentAiScore, currentPlayerScore) => {
+    if (aiTurnInProgress.current) return;
+    aiTurnInProgress.current = true;
+
     setAiFace("thinking");
 
     // Helper to evaluate a potential move
@@ -351,6 +355,7 @@ export function useGameEngine() {
     
     // AI has no moves (board full) -> handoff
     if (emptyCells.length === 0 || currentAiHand.length === 0) {
+      aiTurnInProgress.current = false;
       return;
     }
 
@@ -375,7 +380,10 @@ export function useGameEngine() {
     }
 
     // Fallback if no moves
-    if (!chosenMove) return;
+    if (!chosenMove) {
+      aiTurnInProgress.current = false;
+      return;
+    }
 
     // Apply move after a simulated thinking delay
     setTimeout(() => {
@@ -449,6 +457,7 @@ export function useGameEngine() {
           setAiFace("neutral");
           setIsAnimating(false);
           setTurn("player");
+          aiTurnInProgress.current = false; // Turn complete
         }, 1800);
 
       } else {
@@ -458,6 +467,7 @@ export function useGameEngine() {
         setTimeout(() => {
           setIsAnimating(false);
           setTurn("player");
+          aiTurnInProgress.current = false; // Turn complete
         }, 800);
       }
     }, 1200); // 1.2s thinking time
