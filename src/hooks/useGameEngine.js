@@ -180,13 +180,7 @@ export function useGameEngine() {
     let cardsToFlip = new Set();
     let comboScore = 0;
 
-    // Find card at position
-    const getCellCard = (r, c) => {
-      const cell = tempBoard.find(cell => cell.row === r && cell.col === c && !cell.isBlocked);
-      return cell ? cell.card : null;
-    };
 
-    const targetCellId = tempBoard.find(c => c.row === r && c.col === c);
 
     // Helpers to add combos
     const registerCombo = (type, cells, points) => {
@@ -238,13 +232,16 @@ export function useGameEngine() {
       const centerIndex = lineCells.findIndex(cell => cell.id === centerCell.id);
       if (centerIndex === -1) return;
 
+      const isAdjacentOnBoard = (cellA, cellB) => 
+        Math.abs(cellA.row - cellB.row) + Math.abs(cellA.col - cellB.col) === 1;
+
       // Find the largest contiguous block of cells with cards around centerIndex
       let startIdx = centerIndex;
-      while (startIdx > 0 && lineCells[startIdx - 1].card) {
+      while (startIdx > 0 && lineCells[startIdx - 1].card && isAdjacentOnBoard(lineCells[startIdx], lineCells[startIdx - 1])) {
         startIdx--;
       }
       let endIdx = centerIndex;
-      while (endIdx < lineCells.length - 1 && lineCells[endIdx + 1].card) {
+      while (endIdx < lineCells.length - 1 && lineCells[endIdx + 1].card && isAdjacentOnBoard(lineCells[endIdx], lineCells[endIdx + 1])) {
         endIdx++;
       }
 
