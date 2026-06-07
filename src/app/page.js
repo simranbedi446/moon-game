@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useGameEngine, PHASES, WILDCARDS } from "../hooks/useGameEngine";
 import soundSynth from "../utils/soundSynth";
+import { motion } from "framer-motion";
 
 const phaseNames = {
   1: "Phase I: Crescent",
@@ -458,10 +459,44 @@ export default function Home() {
         {gameStage === "menu" && (
           <div className="menu-view glass-panel">
             <div className="menu-title-container">
-              <div className="menu-moon-backdrop-glow"></div>
-              <div className="menu-title-glow">
+              <motion.div 
+                className="menu-moon-backdrop-glow"
+                animate={{
+                  scale: [0.95, 1.15, 0.95],
+                  opacity: [0.7, 1.0, 0.7]
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+              <motion.div 
+                className="menu-title-glow"
+                initial={{ scale: 0, opacity: 0, rotate: -30 }}
+                animate={{ 
+                  scale: 1, 
+                  opacity: 1, 
+                  rotate: 0,
+                  y: [0, -8, 0]
+                }}
+                whileHover={{ 
+                  scale: 1.08,
+                  filter: "drop-shadow(0 0 25px rgba(249, 226, 175, 0.7))",
+                  transition: { duration: 0.3 }
+                }}
+                whileTap={{ scale: 0.95 }}
+                transition={{
+                  initial: { type: "spring", stiffness: 80, damping: 12 },
+                  y: {
+                    duration: 5,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }
+                }}
+              >
                 <MoonSvg phaseId={4} size={100} />
-              </div>
+              </motion.div>
             </div>
             <h2>Rise of the Lunar Grid</h2>
             <p className="menu-tagline">
