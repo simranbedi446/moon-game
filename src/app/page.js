@@ -294,6 +294,9 @@ export default function Home() {
   const [logoPhaseId, setLogoPhaseId] = useState(0);
 
   useEffect(() => {
+    // Start ambient background music (starts once the user interacts with the page)
+    soundSynth.startAmbient();
+
     const interval = setInterval(() => {
       setLogoPhaseId((prev) => (prev + 1) % 8);
     }, 1200); // Cycles moon phase in header every 1.2 seconds

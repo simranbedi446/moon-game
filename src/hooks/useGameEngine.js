@@ -236,7 +236,7 @@ export function useGameEngine() {
   const goToMenu = useCallback(() => {
     soundSynth.playClick();
     setGameStage("menu");
-    soundSynth.stopAmbient();
+    soundSynth.startAmbient();
     setJustUnlockedWildcard(null);
   }, []);
 

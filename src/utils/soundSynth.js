@@ -13,6 +13,27 @@ class SoundSynth {
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       this.ctx = new AudioContext();
+
+      // Setup automatic unlock on first user interaction
+      const unlock = () => {
+        if (this.ctx && this.ctx.state === "suspended") {
+          this.ctx.resume().then(() => {
+            removeListeners();
+          }).catch(err => console.warn("Failed to resume AudioContext", err));
+        } else {
+          removeListeners();
+        }
+      };
+
+      const removeListeners = () => {
+        window.removeEventListener("click", unlock);
+        window.removeEventListener("touchstart", unlock);
+        window.removeEventListener("keydown", unlock);
+      };
+
+      window.addEventListener("click", unlock);
+      window.addEventListener("touchstart", unlock);
+      window.addEventListener("keydown", unlock);
     } catch (e) {
       console.warn("Web Audio API not supported", e);
     }
@@ -45,17 +66,17 @@ class SoundSynth {
     const gain = this.ctx.createGain();
 
     osc.type = "triangle";
-    osc.frequency.setValueAtTime(150, t);
-    osc.frequency.exponentialRampToValueAtTime(40, t + 0.1);
+    osc.frequency.setValueAtTime(220, t); // Higher starting pitch for better laptop speaker audibility
+    osc.frequency.exponentialRampToValueAtTime(80, t + 0.12); // Prevent dropping into inaudible bass
 
-    gain.gain.setValueAtTime(0.3, t);
-    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+    gain.gain.setValueAtTime(0.6, t); // Increased volume slightly
+    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.12);
 
     osc.connect(gain);
     gain.connect(this.ctx.destination);
 
     osc.start(t);
-    osc.stop(t + 0.12);
+    osc.stop(t + 0.14);
   }
 
   // Soft high-frequency sweep when hovering
@@ -69,16 +90,16 @@ class SoundSynth {
 
     osc.type = "sine";
     osc.frequency.setValueAtTime(800, t);
-    osc.frequency.exponentialRampToValueAtTime(1200, t + 0.05);
+    osc.frequency.exponentialRampToValueAtTime(1100, t + 0.1); // Slightly longer sweep
 
-    gain.gain.setValueAtTime(0.02, t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+    gain.gain.setValueAtTime(0.08, t); // Increased volume from 0.02 for clear audibility
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
 
     osc.connect(gain);
     gain.connect(this.ctx.destination);
 
     osc.start(t);
-    osc.stop(t + 0.06);
+    osc.stop(t + 0.12);
   }
 
   // Gentle sliding tone when drawing a card
@@ -91,17 +112,17 @@ class SoundSynth {
     const gain = this.ctx.createGain();
 
     osc.type = "sine";
-    osc.frequency.setValueAtTime(200, t);
-    osc.frequency.exponentialRampToValueAtTime(600, t + 0.25);
+    osc.frequency.setValueAtTime(220, t);
+    osc.frequency.exponentialRampToValueAtTime(650, t + 0.28);
 
-    gain.gain.setValueAtTime(0.15, t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+    gain.gain.setValueAtTime(0.22, t); // Increased volume for presence
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
 
     osc.connect(gain);
     gain.connect(this.ctx.destination);
 
     osc.start(t);
-    osc.stop(t + 0.26);
+    osc.stop(t + 0.3);
   }
 
   // Celestial major chord chime when matching
@@ -112,7 +133,7 @@ class SoundSynth {
     const t = this.ctx.currentTime;
     // Frequencies for a beautiful major 7th chord (C4, E4, G4, B4, C5)
     const freqs = [261.63, 329.63, 392.00, 493.88, 523.25];
-    const duration = 1.2;
+    const duration = 1.5; // Slightly longer sustain
 
     freqs.forEach((freq, index) => {
       const osc = this.ctx.createOscillator();
@@ -124,7 +145,7 @@ class SoundSynth {
       osc.frequency.setValueAtTime(freq, t + noteDelay);
 
       gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.12, t + noteDelay + 0.05);
+      gain.gain.linearRampToValueAtTime(0.18, t + noteDelay + 0.05); // Boosted chord volume for reward
       gain.gain.exponentialRampToValueAtTime(0.001, t + noteDelay + duration);
 
       osc.connect(gain);
@@ -152,14 +173,14 @@ class SoundSynth {
       osc.frequency.setValueAtTime(freq, t + noteDelay);
 
       gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.08, t + noteDelay + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + noteDelay + 0.6);
+      gain.gain.linearRampToValueAtTime(0.12, t + noteDelay + 0.02); // Boosted win chime
+      gain.gain.exponentialRampToValueAtTime(0.001, t + noteDelay + 0.8);
 
       osc.connect(gain);
       gain.connect(this.ctx.destination);
 
       osc.start(t + noteDelay);
-      osc.stop(t + noteDelay + 0.7);
+      osc.stop(t + noteDelay + 0.9);
     });
   }
 
@@ -185,15 +206,15 @@ class SoundSynth {
       filter.frequency.setValueAtTime(250, t);
 
       gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.08, t + noteDelay + 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + noteDelay + 1.2);
+      gain.gain.linearRampToValueAtTime(0.14, t + noteDelay + 0.05); // Boosted lose drone
+      gain.gain.exponentialRampToValueAtTime(0.001, t + noteDelay + 1.5);
 
       osc.connect(filter);
       filter.connect(gain);
       gain.connect(this.ctx.destination);
 
       osc.start(t + noteDelay);
-      osc.stop(t + noteDelay + 1.3);
+      osc.stop(t + noteDelay + 1.6);
     });
   }
 
@@ -209,21 +230,21 @@ class SoundSynth {
 
     osc.type = "triangle";
     osc.frequency.setValueAtTime(300, t);
-    osc.frequency.exponentialRampToValueAtTime(100, t + 0.2);
+    osc.frequency.exponentialRampToValueAtTime(100, t + 0.25);
 
     filter.type = "bandpass";
     filter.frequency.setValueAtTime(500, t);
-    filter.frequency.exponentialRampToValueAtTime(150, t + 0.2);
+    filter.frequency.exponentialRampToValueAtTime(150, t + 0.25);
 
-    gain.gain.setValueAtTime(0.15, t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+    gain.gain.setValueAtTime(0.22, t); // Boosted volume for flips
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
 
     osc.connect(filter);
     filter.connect(gain);
     gain.connect(this.ctx.destination);
 
     osc.start(t);
-    osc.stop(t + 0.22);
+    osc.stop(t + 0.27);
   }
 
   // Low ambient space background hum
@@ -234,19 +255,25 @@ class SoundSynth {
     const t = this.ctx.currentTime;
     this.ambientGain = this.ctx.createGain();
     this.ambientGain.gain.setValueAtTime(0, t);
-    this.ambientGain.gain.linearRampToValueAtTime(0.03, t + 2); // Slow fade-in
+    this.ambientGain.gain.linearRampToValueAtTime(0.08, t + 2); // Raised gain to 0.08 for clear background volume
 
-    // Two detuned oscillators for a slow binaural beat drone (60Hz and 60.5Hz)
+    // Low pass filter to make the drone warm while keeping some harmonics audible on mobile/laptop speakers
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(220, t);
+
+    // Detuned oscillators around A2 (110Hz and 110.6Hz) using triangle waves to add warm, audible harmonics
     this.ambientOsc1 = this.ctx.createOscillator();
-    this.ambientOsc1.type = "sine";
-    this.ambientOsc1.frequency.setValueAtTime(60, t);
+    this.ambientOsc1.type = "triangle";
+    this.ambientOsc1.frequency.setValueAtTime(110, t);
 
     this.ambientOsc2 = this.ctx.createOscillator();
-    this.ambientOsc2.type = "sine";
-    this.ambientOsc2.frequency.setValueAtTime(60.5, t);
+    this.ambientOsc2.type = "triangle";
+    this.ambientOsc2.frequency.setValueAtTime(110.6, t);
 
-    this.ambientOsc1.connect(this.ambientGain);
-    this.ambientOsc2.connect(this.ambientGain);
+    this.ambientOsc1.connect(filter);
+    this.ambientOsc2.connect(filter);
+    filter.connect(this.ambientGain);
     this.ambientGain.connect(this.ctx.destination);
 
     this.ambientOsc1.start(t);
