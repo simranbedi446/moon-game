@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useGameEngine, PHASES, WILDCARDS } from "../hooks/useGameEngine";
 import soundSynth from "../utils/soundSynth";
 
@@ -189,13 +189,36 @@ export default function Home() {
     );
   };
 
-  const getCellCenter = (row, col) => {
-    const N = level === 1 ? 3 : level === 2 ? 4 : 5;
-    return {
-      x: ((col + 0.5) / N) * 100,
-      y: ((row + 0.5) / N) * 100
+  const gridRef = useRef(null);
+  const [cellCenters, setCellCenters] = useState({});
+
+  const updateCellCenters = useCallback(() => {
+    if (!gridRef.current) return;
+    const containerRect = gridRef.current.getBoundingClientRect();
+    const centers = {};
+    
+    board.forEach(cell => {
+      const cellEl = document.getElementById(cell.id);
+      if (cellEl) {
+        const cellRect = cellEl.getBoundingClientRect();
+        centers[cell.id] = {
+          x: cellRect.left - containerRect.left + cellRect.width / 2,
+          y: cellRect.top - containerRect.top + cellRect.height / 2
+        };
+      }
+    });
+    setCellCenters(centers);
+  }, [board]);
+
+  useEffect(() => {
+    updateCellCenters();
+    const timer = setTimeout(updateCellCenters, 100);
+    window.addEventListener("resize", updateCellCenters);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", updateCellCenters);
     };
-  };
+  }, [updateCellCenters, gameStage, level]);
 
   const getBoardLinks = () => {
     let links = [];
@@ -452,13 +475,15 @@ export default function Home() {
                 )}
 
                 {/* Grid Dynamic Rendering */}
-                <div className={`board-grid grid-level-${level}`}>
+                <div ref={gridRef} className={`board-grid grid-level-${level}`}>
                    {/* Visual connection lines overlay */}
                    <svg className="connection-lines-svg">
                      {getBoardLinks().map((link, idx) => {
-                       const posA = getCellCenter(link.cellA.row, link.cellA.col);
-                       const posB = getCellCenter(link.cellB.row, link.cellB.col);
+                       const posA = cellCenters[link.cellA.id];
+                       const posB = cellCenters[link.cellB.id];
                        
+                       if (!posA || !posB) return null;
+
                        // Find if this link is part of an active combo
                        const activeCombo = recentCombos.find(combo => 
                          combo.cells.includes(link.cellA.id) && combo.cells.includes(link.cellB.id)
@@ -475,10 +500,10 @@ export default function Home() {
                        return (
                          <line
                            key={`link-${idx}`}
-                           x1={`${posA.x}%`}
-                           y1={`${posA.y}%`}
-                           x2={`${posB.x}%`}
-                           y2={`${posB.y}%`}
+                           x1={posA.x}
+                           y1={posA.y}
+                           x2={posB.x}
+                           y2={posB.y}
                            className={`connection-line ${isLinked ? "linked" : ""} ${ownerClass}`}
                          />
                        );
@@ -488,7 +513,7 @@ export default function Home() {
                   {board.map((cell) => {
                     if (cell.isBlocked) {
                       return (
-                        <div key={cell.id} className="board-cell cell-blocked">
+                        <div key={cell.id} id={cell.id} className="board-cell cell-blocked">
                           <span className="blocked-star">★</span>
                         </div>
                       );
@@ -497,6 +522,7 @@ export default function Home() {
                     return (
                       <div
                         key={cell.id}
+                        id={cell.id}
                         onClick={() => handleCellClick(cell.id)}
                         onDragOver={(e) => {
                           if (turn === "player" && !cell.card && !cell.isBlocked) {
