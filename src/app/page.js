@@ -291,6 +291,15 @@ export default function Home() {
     handleToggleMute
   } = useGameEngine();
 
+  const [logoPhaseId, setLogoPhaseId] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLogoPhaseId((prev) => (prev + 1) % 8);
+    }, 1200); // Cycles moon phase in header every 1.2 seconds
+    return () => clearInterval(interval);
+  }, []);
+
   const renderProgressDots = (count) => {
     return (
       <div className="progress-dots" title={`${count} of 3 games won at this level`}>
@@ -439,7 +448,24 @@ export default function Home() {
       {/* Header Panel */}
       <header className="game-header">
         <div className="logo-section" onClick={goToMenu}>
-          <span className="logo-spark">✨</span>
+          <motion.div 
+            className="logo-moon-container"
+            animate={{ 
+              scale: [1, 1.1, 1],
+              filter: [
+                "drop-shadow(0 0 8px rgba(249, 226, 175, 0.4))",
+                "drop-shadow(0 0 16px rgba(203, 166, 247, 0.6))",
+                "drop-shadow(0 0 8px rgba(249, 226, 175, 0.4))"
+              ]
+            }}
+            transition={{
+              duration: 2.4,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          >
+            <MoonSvg phaseId={logoPhaseId} size={32} />
+          </motion.div>
           <h1>CELESTIAL CYCLES</h1>
         </div>
         <div className="header-controls">
