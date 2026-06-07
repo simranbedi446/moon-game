@@ -1,4 +1,5 @@
 # Celestial Cycles 🌙 (Rise of the Half Moon Card Game)
+.................................................................
 
 Celestial Cycles is a highly polished, responsive, and visually stunning web card strategy game inspired by the Google Doodle game **"Rise of the Half Moon"**. 
 
