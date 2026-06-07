@@ -235,7 +235,7 @@ export function useGameEngine() {
         
         // Check Phase Pair (Identical phases)
         if (placedCard.phase === neighborCard.phase) {
-          registerCombo("pair", [currentCell, neighborCell], 1);
+          registerCombo("pair", [currentCell, neighborCell], 0.5);
         }
         
         // Check Full Moon Pair (Complementary phases)
@@ -245,7 +245,7 @@ export function useGameEngine() {
       }
     });
 
-    // 2. Check Cycles (Contiguous path of 3 or more consecutive phases containing the placed card)
+    // 2. Check Cycles (Contiguous path of 2 or more consecutive phases containing the placed card)
     const getNeighbors = (cell) => {
       return tempBoard.filter(other => 
         !other.isBlocked && 
@@ -291,7 +291,7 @@ export function useGameEngine() {
         const sharesOtherCell = F.some((cell, idx) => idx > 0 && B.some(bCell => bCell.id === cell.id));
         if (!sharesOtherCell) {
           const combined = [...B.slice(1).reverse(), ...F];
-          if (combined.length >= 3) {
+          if (combined.length >= 2) {
             foundCycles.push(combined);
           }
         }

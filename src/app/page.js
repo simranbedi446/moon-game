@@ -308,7 +308,7 @@ export default function Home() {
 
             <div className="rules-grid">
               <div className="rule-card">
-                <h3>1. Phase Pairs (1 Pt)</h3>
+                <h3>1. Phase Pairs (0.5 Pt)</h3>
                 <p>Place two cards of the identical lunar phase side-by-side (horizontally or vertically).</p>
                 <div className="rule-visual">
                   <MoonSvg phaseId={2} size={40} />
@@ -329,7 +329,7 @@ export default function Home() {
 
               <div className="rule-card">
                 <h3>3. Lunar Cycles (1 Pt per card)</h3>
-                <p>Align 3 or more phases in consecutive order in a straight line (e.g., Crescent ➔ Quarter ➔ Gibbous). Loops around!</p>
+                <p>Align 2 or more phases in consecutive order along any adjacent path (e.g., Crescent ➔ Quarter). Loops around!</p>
                 <div className="rule-visual">
                   <MoonSvg phaseId={1} size={35} />
                   <span className="visual-arrow">➔</span>
