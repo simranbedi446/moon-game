@@ -1,4 +1,4 @@
-# 🌙 Celestial Cycles: Codebase & Architecture Guide (Non-Technical Explanation)
+#  Celestial Cycles: Codebase & Architecture Guide 
 
 Welcome to the **Celestial Cycles** codebase! If you are a non-technical person, a designer, or a curious player looking to understand how this game works under the hood, this document is for you.
 
@@ -10,7 +10,7 @@ To make this easy to understand, let's imagine this game as a **theater producti
 
 ---
 
-## 📂 File-by-File Breakdown
+##  File-by-File Breakdown
 
 Here is a map of the project files, where they live, and exactly what job they do:
 
@@ -23,7 +23,7 @@ graph TD
     D -->|Commands sound playback| E
 ```
 
-### 1. 🎭 `src/app/page.js` (The Visual Stage)
+### 1. `src/app/page.js` (The Visual Stage)
 *   **What it is:** The visual layout of the game. It draws the menus, buttons, cards, boards, and scoreboards onto the screen.
 *   **What it does:**
     *   **Controls Drag-and-Drop:** It lets you grab a lunar card from your hand and drop it onto the grid.
@@ -31,7 +31,7 @@ graph TD
     *   **Renders the Moon Graphics:** It draws high-fidelity custom SVG moons (using mathematical lines, craters, and 3D shadows) representing each phase (New Moon, Crescents, Quarters, Gibbous, and Full Moon).
     *   **Connects Combos:** It physically draws glowing lines between matching moon tiles on the grid so you can see your pairs or cycles light up.
 
-### 2. 🧠 `src/hooks/useGameEngine.js` (The Game Master & AI)
+### 2.  `src/hooks/useGameEngine.js` (The Game Master & AI)
 *   **What it is:** The mathematical heart and state-manager of the game. It knows nothing about graphics; it only cares about numbers, lists, grids, and rules.
 *   **What it does:**
     *   **Keeps Game State:** It knows the current level, whose turn it is (Player or AI), how many cards are left in the deck, and what the scores are.
@@ -47,7 +47,7 @@ graph TD
         *   *Eclipse:* Captures neighboring tiles.
         *   *Meteor:* Destroys a card on the grid.
 
-### 🔊 3. `src/utils/soundSynth.js` (The Sound Designer)
+###  3. `src/utils/soundSynth.js` (The Sound Designer)
 *   **What it is:** A dynamic sound synthesizer. Instead of downloading heavy, slow audio files (like `.mp3` or `.wav`), it creates sound waves directly in your web browser using code!
 *   **What it does:**
     *   **Bypasses Autoplay Restrictions:** Web browsers prevent sites from playing audio automatically. This file listens for your very first click on the page and "auto-unlocks" the audio engine immediately.
@@ -59,7 +59,7 @@ graph TD
         *   *Win/Lose Chimes:* Rewarding scales or dark, low-pitched sweeps when a round concludes.
         *   *Wooshes:* Air-like sound waves when cards flip.
 
-### 🎨 4. `src/app/globals.css` (The Costume Designer)
+### 4. `src/app/globals.css` (The Costume Designer)
 *   **What it is:** The style stylesheet. It holds all the colors, fonts, margins, sizes, and decorative glows.
 *   **What it does:**
     *   **Defines the Cosmic Color Palette:** Stores CSS variables for deep space purples, gold neon stars, orbital paths, and glassmorphic panels.
@@ -67,7 +67,7 @@ graph TD
     *   **Applies Custom Fonts:** Sets up clean, modern typography (like *Geist Sans* and *Geist Mono*) for a premium, clean look.
     *   **Handles Screen Sizes:** Ensures the cards, grids, and scoreboard rearrange themselves beautifully on wide desktop monitors, tablet screens, and small smartphones.
 
-### 🖼️ 5. `src/app/layout.js` (The Frame)
+### 5. `src/app/layout.js` (The Frame)
 *   **What it is:** The outermost container of the application.
 *   **What it does:**
     *   Injects the global fonts and CSS stylesheets.
@@ -75,7 +75,7 @@ graph TD
 
 ---
 
-## 🛠️ Configuration & Housekeeping Files
+##  Configuration & Housekeeping Files
 Located in the project root, these files configure the environment rather than run the game:
 *   **`package.json`**: The manifest listing the external libraries (like React, Next.js, and Framer Motion) required to run and build the project.
 *   **`next.config.mjs`**: Tells Next.js how to compile and run the server.
