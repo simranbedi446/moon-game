@@ -10,47 +10,157 @@ const phaseNames = {
   3: "Phase III: Eclipse"
 };
 
-// High-fidelity SVG Moon Phase renderer
+// Help text for the unlocked Cosmic Spells
+const getWildcardWhy = (type) => {
+  switch (type) {
+    case "equinox":
+      return "For achieving perfect balance between light and shadow on the lunar grid and defeating the Half Moon's gravitational pull.";
+    case "supermoon":
+      return "For harnessing the ultimate gravitational alignment of the lunar orbit and drawing maximum celestial energy.";
+    case "eclipse":
+      return "For successfully casting a shadow over the Half Moon's layout, shifting the tides of ownership in your favor.";
+    case "meteor":
+      return "For shattering the Half Moon's sequence alignments by invoking high-energy cosmic impact.";
+    default:
+      return "For demonstrating stellar mastery over the celestial cycles in this round.";
+  }
+};
+
+const getWildcardUse = (type) => {
+  switch (type) {
+    case "equinox":
+      return "Swap scores with the Half Moon instantly. This is a game-changer if you are trailing behind in points!";
+    case "supermoon":
+      return "Doubles all combo scores (Pairs, Full Moons, and Lunar Cycles) that you form on the turn it is activated.";
+    case "eclipse":
+      return "When you place a card on the grid, this spell flips all adjacent card tiles (up, down, left, right) to your color (White/Gold).";
+    case "meteor":
+      return "Removes and vaporizes any card currently placed on the grid, opening up blocked spaces or disrupting the AI's cycles.";
+    default:
+      return "Grants cosmic manipulation powers over the lunar board.";
+  }
+};
+
+const getWildcardHow = (type) => {
+  switch (type) {
+    case "equinox":
+      return "During your turn, click on the Equinox spell icon under 'COSMIC SPELLS' at the bottom right. Your scores will instantly swap!";
+    case "supermoon":
+      return "During your turn, click on the Supermoon spell icon under 'COSMIC SPELLS'. The spell banner will light up. Then place a card from your hand on the grid to score double points.";
+    case "eclipse":
+      return "During your turn, click on the Solar Eclipse spell icon under 'COSMIC SPELLS'. Then, place a card from your hand. Any neighboring cards will instantly flip to your color.";
+    case "meteor":
+      return "During your turn, click on the Meteor Shower spell icon under 'COSMIC SPELLS'. Then, click directly on any card on the grid to vaporize it, freeing up that slot.";
+    default:
+      return "Click the spell button in the 'COSMIC SPELLS' panel on your turn to cast it.";
+  }
+};
+
+// High-fidelity SVG Moon Phase renderer with realistic craters, maria, and 3D shading
 function MoonSvg({ phaseId, size = 60, glowColor = "rgba(249, 226, 175, 0.4)" }) {
   const r = 18;
   const c = 20;
 
-  // Render different path data based on phase index
-  const renderPhasePath = () => {
+  // Returns the path for the lit phase shape
+  const getPhasePath = () => {
     switch (phaseId) {
       case 0: // New Moon
-        return null;
+        return "";
       case 1: // Waxing Crescent (sliver on right)
-        return <path d={`M 20 2 A 18 18 0 0 1 20 38 A 11 18 0 0 0 20 2 Z`} fill="#f9e2af" filter="url(#glow)" />;
+        return "M 20 2 A 18 18 0 0 1 20 38 A 11 18 0 0 0 20 2 Z";
       case 2: // First Quarter (right half lit)
-        return <path d={`M 20 2 A 18 18 0 0 1 20 38 Z`} fill="#f9e2af" filter="url(#glow)" />;
+        return "M 20 2 A 18 18 0 0 1 20 38 Z";
       case 3: // Waxing Gibbous (mostly lit on right)
-        return <path d={`M 20 2 A 18 18 0 0 1 20 38 A 11 18 0 0 1 20 2 Z`} fill="#f9e2af" filter="url(#glow)" />;
+        return "M 20 2 A 18 18 0 0 1 20 38 A 11 18 0 0 1 20 2 Z";
       case 4: // Full Moon
-        return <circle cx={c} cy={c} r={r} fill="#f9e2af" filter="url(#glow)" />;
+        return "M 20 2 A 18 18 0 1 1 19.9 2 Z";
       case 5: // Waning Gibbous (mostly lit on left)
-        return <path d={`M 20 2 A 18 18 0 0 0 20 38 A 11 18 0 0 0 20 2 Z`} fill="#f9e2af" filter="url(#glow)" />;
+        return "M 20 2 A 18 18 0 0 0 20 38 A 11 18 0 0 0 20 2 Z";
       case 6: // Last Quarter (left half lit)
-        return <path d={`M 20 2 A 18 18 0 0 0 20 38 Z`} fill="#f9e2af" filter="url(#glow)" />;
+        return "M 20 2 A 18 18 0 0 0 20 38 Z";
       case 7: // Waning Crescent (sliver on left)
-        return <path d={`M 20 2 A 18 18 0 0 0 20 38 A 11 18 0 0 1 20 2 Z`} fill="#f9e2af" filter="url(#glow)" />;
+        return "M 20 2 A 18 18 0 0 0 20 38 A 11 18 0 0 1 20 2 Z";
       default:
-        return null;
+        return "";
     }
   };
+
+  const pathD = getPhasePath();
 
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" className="moon-svg-render">
       <defs>
-        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="1.5" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        {/* Glow filter */}
+        <filter id={`moon-glow-${phaseId}`} x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="2.2" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
         </filter>
+
+        {/* Lit Moon Surface Gradient (3D Shading) */}
+        <radialGradient id={`lit-moon-grad-${phaseId}`} cx="35%" cy="35%" r="65%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="35%" stopColor="#fdf5cf" />
+          <stop offset="75%" stopColor="#f9e2af" />
+          <stop offset="100%" stopColor="#d8ab5a" />
+        </radialGradient>
+
+        {/* Dark Moon Surface Gradient (Earthshine effect) */}
+        <radialGradient id={`dark-moon-grad-${phaseId}`} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#0a0a14" />
+          <stop offset="85%" stopColor="#12121e" />
+          <stop offset="100%" stopColor="#222335" />
+        </radialGradient>
+
+        {/* Mask to cut out the illuminated phase shape */}
+        <mask id={`mask-phase-${phaseId}`}>
+          <rect x="0" y="0" width="40" height="40" fill="black" />
+          {phaseId === 4 ? (
+            <circle cx="20" cy="20" r="18" fill="white" />
+          ) : (
+            <path d={pathD} fill="white" />
+          )}
+        </mask>
       </defs>
-      {/* Background shadow disk of moon */}
-      <circle cx={c} cy={c} r={r} fill="#1e1e2e" stroke="#45475a" strokeWidth="0.8" />
-      {/* Lit Overlay */}
-      {renderPhasePath()}
+
+      {/* 1. Base Dark Moon (unlit side with earthshine and dark craters) */}
+      <circle cx={c} cy={c} r={r} fill={`url(#dark-moon-grad-${phaseId})`} stroke="#222335" strokeWidth="0.5" />
+      
+      {/* Dark Maria (Lunar Seas) */}
+      <circle cx="15" cy="14" r="3.5" fill="#05050a" opacity="0.55" />
+      <circle cx="25" cy="17" r="3.2" fill="#05050a" opacity="0.45" />
+      <circle cx="23" cy="25" r="4.2" fill="#05050a" opacity="0.55" />
+      
+      {/* Dark Craters */}
+      <circle cx="20" cy="31" r="1.8" fill="#12121e" opacity="0.75" />
+      <circle cx="13" cy="19" r="1.5" fill="#12121e" opacity="0.75" />
+      <circle cx="9" cy="23" r="1" fill="#12121e" opacity="0.75" />
+
+      {/* 2. Illuminated Moon (masked to match the current phase shape) */}
+      <g mask={`url(#mask-phase-${phaseId})`} filter={`url(#moon-glow-${phaseId})`}>
+        {/* Glowy Lit Surface */}
+        <circle cx={c} cy={c} r={r} fill={`url(#lit-moon-grad-${phaseId})`} />
+
+        {/* Lit Maria (Basalt Plains) */}
+        <circle cx="15" cy="14" r="3.5" fill="#ab9773" opacity="0.32" />
+        <circle cx="25" cy="17" r="3.2" fill="#ab9773" opacity="0.27" />
+        <circle cx="23" cy="25" r="4.2" fill="#ab9773" opacity="0.32" />
+
+        {/* Tycho Crater Rays */}
+        <line x1="20" y1="31" x2="20" y2="15" stroke="#ffffff" strokeWidth="0.35" opacity="0.45" />
+        <line x1="20" y1="31" x2="10" y2="25" stroke="#ffffff" strokeWidth="0.35" opacity="0.45" />
+        <line x1="20" y1="31" x2="30" y2="25" stroke="#ffffff" strokeWidth="0.35" opacity="0.45" />
+        <line x1="20" y1="31" x2="13" y2="35" stroke="#ffffff" strokeWidth="0.35" opacity="0.45" />
+        <line x1="20" y1="31" x2="27" y2="35" stroke="#ffffff" strokeWidth="0.35" opacity="0.45" />
+
+        {/* Lit Craters */}
+        <circle cx="20" cy="31" r="1.8" fill="#e5cca0" stroke="#ffffff" strokeWidth="0.4" opacity="0.85" />
+        <circle cx="13" cy="19" r="1.5" fill="#e5cca0" stroke="#ffffff" strokeWidth="0.4" opacity="0.85" />
+        <circle cx="9" cy="23" r="1" fill="#e5cca0" stroke="#ffffff" strokeWidth="0.4" opacity="0.85" />
+        <circle cx="31" cy="22" r="1.2" fill="#e5cca0" stroke="#ffffff" strokeWidth="0.4" opacity="0.85" />
+      </g>
     </svg>
   );
 }
@@ -168,6 +278,8 @@ export default function Home() {
     gamesWon,
     playerBonus,
     aiBonus,
+    justUnlockedWildcard,
+    setJustUnlockedWildcard,
     setSelectedHandCard,
     startNewLevelProgression,
     startNextGame,
@@ -290,7 +402,7 @@ export default function Home() {
       if (c.type === "pair") return `Pair (+${c.score} pts)`;
       if (c.type === "full-moon") return `Full Moon (+${c.score} pts)`;
       if (c.type === "cycle") return `Lunar Cycle (+${c.score} pts)`;
-      if (c.type === "wildcard") return `Wildcard Spell!`;
+      if (c.type === "wildcard") return `Cosmic Spell!`;
       return "Combo!";
     });
     return items.join(" & ");
@@ -306,7 +418,7 @@ export default function Home() {
       case "sad":
         return "Ouch, you broke my lunar cycle sequence!";
       case "shocked":
-        return "Celestial anomalies! What a wildcard!";
+        return "Celestial anomalies! What a cosmic spell!";
       case "sleeping":
         return "Zzz... take your turn, child of the stars.";
       default:
@@ -345,8 +457,11 @@ export default function Home() {
         {/* STAGE: MENU */}
         {gameStage === "menu" && (
           <div className="menu-view glass-panel">
-            <div className="menu-title-glow">
-              <MoonSvg phaseId={4} size={90} />
+            <div className="menu-title-container">
+              <div className="menu-moon-backdrop-glow"></div>
+              <div className="menu-title-glow">
+                <MoonSvg phaseId={4} size={100} />
+              </div>
             </div>
             <h2>Rise of the Lunar Grid</h2>
             <p className="menu-tagline">
@@ -450,7 +565,7 @@ export default function Home() {
             <div className="game-grid-section">
               {/* Score Player */}
               <div className="player-scoreboard glass-panel player-side">
-                <h3>YOUR ORBIT</h3>
+                <h3>YOUR ALIGNMENT</h3>
                 <div className="score-value player-glow">{playerScore}</div>
                 <div className="turn-indicator">{turn === "player" ? "⚡ YOUR TURN" : "WAITING..."}</div>
                 <div className="hand-count">Cards remaining: {playerHand.length}</div>
@@ -465,10 +580,10 @@ export default function Home() {
                   {renderProgressDots(gamesWon)}
                 </div>
 
-                {/* Active Wildcard Notice banner */}
+                {/* Active Spell Notice banner */}
                 {activeWildEffect && (
                   <div className={`wild-banner ${activeWildEffect}`}>
-                    <span>🔮 {activeWildEffect.toUpperCase()} ACTIVE:</span> 
+                    <span>🔮 COSMIC SPELL ACTIVE: {activeWildEffect.toUpperCase()}</span> 
                     {activeWildEffect === "meteor" ? "Click any card on the board to vaporize it." : "Click a cell to play a card with active magic!"}
                   </div>
                 )}
@@ -611,11 +726,11 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Bottom Bar: Player Hand and Wildcards */}
+            {/* Bottom Bar: Player Hand and Cosmic Spells */}
             <div className="player-controls-row">
               {/* Hand cards */}
               <div className="hand-container glass-panel">
-                <h4>YOUR HAND</h4>
+                <h4>LUNAR HAND</h4>
                 <div className="hand-cards">
                   {playerHand.map((card) => {
                     const isSelected = selectedHandCard && selectedHandCard.id === card.id;
@@ -646,9 +761,9 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Wildcards panel */}
+              {/* Spells panel */}
               <div className="wildcards-container glass-panel">
-                <h4>SPELL WILDCARDS</h4>
+                <h4>COSMIC SPELLS</h4>
                 {playerWilds.length > 0 ? (
                   <div className="wildcards-list">
                     {playerWilds.map((wildType, idx) => {
@@ -669,7 +784,7 @@ export default function Home() {
                   </div>
                 ) : (
                   <div className="no-wilds-message">
-                    Win rounds to unlock cosmic wildcards!
+                    Win rounds to unlock cosmic spells!
                   </div>
                 )}
               </div>
@@ -684,7 +799,7 @@ export default function Home() {
             {playerScore >= aiScore ? (
               <div className="victory-badge">
                 <span className="crown">👑</span>
-                <h2>{gamesWon === 3 ? "ORBIT COMPLETED!" : "ROUND WON!"}</h2>
+                <h2>{gamesWon === 3 ? "PHASE COMPLETED!" : "ROUND WON!"}</h2>
               </div>
             ) : (
               <div className="defeat-badge">
@@ -694,35 +809,45 @@ export default function Home() {
             )}
 
             <div className="round-breakdown">
-              <h3>Orbit Alignment Summary</h3>
-              <div className="breakdown-table">
-                <div className="table-row">
-                  <span>Current Phase:</span>
-                  <strong>{phaseNames[level]}</strong>
+              <h3>Lunar Alignment Summary</h3>
+              
+              <div className="current-phase-display">
+                <span>Current Phase:</span>
+                <strong>{phaseNames[level]}</strong>
+              </div>
+
+              <div className="breakdown-table-cols">
+                {/* Column Headers */}
+                <div className="table-header-cols">
+                  <span className="col-label">Category</span>
+                  <span className="col-val player-text">You (Gold)</span>
+                  <span className="col-val ai-text">Half Moon</span>
                 </div>
-                <div className="table-row">
-                  <span>Combo Alignments:</span>
-                  <strong>
-                    <span className="player-text">{playerScore - playerBonus}</span> vs{" "}
-                    <span className="ai-text">{aiScore - aiBonus}</span>
-                  </strong>
+
+                {/* Combos Row */}
+                <div className="table-row-cols">
+                  <span className="row-label">Combo Alignments</span>
+                  <span className="row-val player-text">{playerScore - playerBonus} pts</span>
+                  <span className="row-val ai-text">{aiScore - aiBonus} pts</span>
                 </div>
-                <div className="table-row">
-                  <span>Board Card Bonus:</span>
-                  <strong>
-                    <span className="player-text">+{playerBonus}</span> vs{" "}
-                    <span className="ai-text">+{aiBonus}</span>
-                  </strong>
+
+                {/* Board Bonus Row */}
+                <div className="table-row-cols">
+                  <span className="row-label">Board Card Bonus</span>
+                  <span className="row-val player-text">+{playerBonus} pts</span>
+                  <span className="row-val ai-text">+{aiBonus} pts</span>
                 </div>
-                <div className="table-row total-row">
-                  <span>Final Scores:</span>
-                  <strong>
-                    <span className="player-text">{playerScore} pts</span> vs{" "}
-                    <span className="ai-text">{aiScore} pts</span>
-                  </strong>
+
+                {/* Final Score Row */}
+                <div className="table-row-cols total-row-cols">
+                  <span className="row-label">Final Score</span>
+                  <span className="row-val player-text highlight-player-score">{playerScore} pts</span>
+                  <span className="row-val ai-text highlight-ai-score">{aiScore} pts</span>
                 </div>
-                <div className="table-row progression-row">
-                  <span>Phase Progress:</span>
+
+                {/* Progression Row */}
+                <div className="table-row-cols progression-row-cols">
+                  <span className="row-label">Phase Progress</span>
                   <div className="progression-indicator-wrapper">
                     <span className="progression-text">{gamesWon === 3 ? "Cleared! 🎉" : `${gamesWon} / 3 Levels Completed`}</span>
                     {renderProgressDots(gamesWon)}
@@ -732,7 +857,7 @@ export default function Home() {
               
               {playerScore >= aiScore && (
                 <div className="unlock-alert">
-                  <span>🎁 Unlocked New Wildcard:</span>
+                  <span>🎁 Unlocked New Spell:</span>
                   <strong>
                     {WILDCARDS[playerWilds.length > 0 ? (playerWilds.length - 1) % WILDCARDS.length : 0].name}
                   </strong>
@@ -743,7 +868,7 @@ export default function Home() {
             <div className="round-end-actions">
               {playerScore >= aiScore ? (
                 <button className="primary-btn glow-gold-btn" onClick={startNextGame}>
-                  {gamesWon === 3 ? "Advance to Next Orbit" : "Next Game"}
+                  {gamesWon === 3 ? "Advance to Next Phase" : "Next Game"}
                 </button>
               ) : (
                 <button className="primary-btn glow-gold-btn" onClick={startNextGame}>
@@ -797,6 +922,48 @@ export default function Home() {
       <footer className="game-footer">
         <p>Created with Celestial Math & HTML5 Web Audio Synthesizer • React Next.js</p>
       </footer>
+
+      {/* Unlocked Cosmic Spell Popup Modal */}
+      {justUnlockedWildcard && (
+        <div className="modal-overlay">
+          <div className="modal-content spell-unlock-modal glass-panel">
+            <div className="sparkles-container">✨ 🔮 ✨</div>
+            <h3>Cosmic Spell Unlocked!</h3>
+            
+            <div className="unlocked-spell-badge">
+              <div className="spell-badge-icon">{justUnlockedWildcard.icon}</div>
+              <div className="spell-badge-name">{justUnlockedWildcard.name}</div>
+            </div>
+
+            <div className="spell-info-sections">
+              <div className="info-section">
+                <h4>Why you received it:</h4>
+                <p>{getWildcardWhy(justUnlockedWildcard.type)}</p>
+              </div>
+              
+              <div className="info-section">
+                <h4>What is its cosmic use:</h4>
+                <p>{getWildcardUse(justUnlockedWildcard.type)}</p>
+              </div>
+
+              <div className="info-section">
+                <h4>How to cast it:</h4>
+                <p>{getWildcardHow(justUnlockedWildcard.type)}</p>
+              </div>
+            </div>
+
+            <button 
+              className="primary-btn glow-gold-btn dismiss-modal-btn" 
+              onClick={() => {
+                soundSynth.playClick();
+                setJustUnlockedWildcard(null);
+              }}
+            >
+              Claim Cosmic Spell
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -154,6 +154,7 @@ export function useGameEngine() {
   const [gamesWon, setGamesWon] = useState(0); // number of games won in current level (0, 1, 2)
   const [playerBonus, setPlayerBonus] = useState(0);
   const [aiBonus, setAiBonus] = useState(0);
+  const [justUnlockedWildcard, setJustUnlockedWildcard] = useState(null); // Track the newly earned Cosmic Spell popup
 
   // Sound toggling
   const handleToggleMute = useCallback(() => {
@@ -168,6 +169,7 @@ export function useGameEngine() {
     setPlayerBonus(0);
     setAiBonus(0);
     setPlayerWilds(["equinox"]);
+    setJustUnlockedWildcard(null);
     soundSynth.resume();
     soundSynth.playClick();
     
@@ -201,6 +203,7 @@ export function useGameEngine() {
     let nextGamesWon = gamesWon;
     setPlayerBonus(0);
     setAiBonus(0);
+    setJustUnlockedWildcard(null);
     if (gamesWon >= 3) {
       nextLevel = level + 1;
       setLevel(nextLevel);
@@ -234,6 +237,7 @@ export function useGameEngine() {
     soundSynth.playClick();
     setGameStage("menu");
     soundSynth.stopAmbient();
+    setJustUnlockedWildcard(null);
   }, []);
 
   // Go to tutorial
@@ -628,6 +632,7 @@ export function useGameEngine() {
         // Grant a random wildcard on winning a game
         const randomWild = WILDCARDS[Math.floor(Math.random() * WILDCARDS.length)];
         setPlayerWilds(prev => [...prev, randomWild.type]);
+        setJustUnlockedWildcard(randomWild);
 
         // 3 wins to progress to next level
         if (gamesWon + 1 >= 3) {
@@ -856,6 +861,8 @@ export function useGameEngine() {
     gamesWon,
     playerBonus,
     aiBonus,
+    justUnlockedWildcard,
+    setJustUnlockedWildcard,
     setSelectedHandCard,
     startNewLevelProgression,
     startNextGame,
