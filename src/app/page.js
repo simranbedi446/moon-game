@@ -203,7 +203,9 @@ export default function Home() {
         const cellRect = cellEl.getBoundingClientRect();
         centers[cell.id] = {
           x: cellRect.left - containerRect.left + cellRect.width / 2,
-          y: cellRect.top - containerRect.top + cellRect.height / 2
+          y: cellRect.top - containerRect.top + cellRect.height / 2,
+          width: cellRect.width,
+          height: cellRect.height
         };
       }
     });
@@ -391,7 +393,7 @@ export default function Home() {
 
               <div className="rule-card">
                 <h3>3. Lunar Cycles (1 Pt per card)</h3>
-                <p>Align 2 or more phases in consecutive order along any adjacent path (e.g., Crescent ➔ Quarter). Loops around!</p>
+                <p>Align 3 or more phases in consecutive order along any adjacent path (e.g., Crescent ➔ Quarter ➔ Gibbous). Loops around!</p>
                 <div className="rule-visual">
                   <MoonSvg phaseId={1} size={35} />
                   <span className="visual-arrow">➔</span>
@@ -499,16 +501,40 @@ export default function Home() {
                          if (owner === "ai") ownerClass = "ai-link";
                        }
 
-                       return (
-                         <line
-                           key={`link-${idx}`}
-                           x1={posA.x}
-                           y1={posA.y}
-                           x2={posB.x}
-                           y2={posB.y}
-                           className={`connection-line ${isLinked ? "linked" : ""} ${ownerClass}`}
-                         />
-                       );
+                        const cellWidth = posA.width;
+                        const cellHeight = posA.height;
+                        let x1 = posA.x;
+                        let y1 = posA.y;
+                        let x2 = posB.x;
+                        let y2 = posB.y;
+
+                        // Calculate endpoints at the edges of the cards to avoid crossing through the card contents
+                        if (link.cellA.row === link.cellB.row) {
+                          const left = posA.x < posB.x ? posA : posB;
+                          const right = posA.x < posB.x ? posB : posA;
+                          x1 = left.x + cellWidth / 2;
+                          y1 = left.y;
+                          x2 = right.x - cellWidth / 2;
+                          y2 = right.y;
+                        } else {
+                          const top = posA.y < posB.y ? posA : posB;
+                          const bottom = posA.y < posB.y ? posB : posA;
+                          x1 = top.x;
+                          y1 = top.y + cellHeight / 2;
+                          x2 = bottom.x;
+                          y2 = bottom.y - cellHeight / 2;
+                        }
+
+                        return (
+                          <line
+                            key={`link-${idx}`}
+                            x1={x1}
+                            y1={y1}
+                            x2={x2}
+                            y2={y2}
+                            className={`connection-line ${isLinked ? "linked" : ""} ${ownerClass}`}
+                          />
+                        );
                      })}
                    </svg>
 
