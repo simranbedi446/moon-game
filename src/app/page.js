@@ -489,6 +489,8 @@ export default function Home() {
                          combo.cells.includes(link.cellA.id) && combo.cells.includes(link.cellB.id)
                        );
                        const isLinked = !!activeCombo;
+
+                       if (!isLinked) return null; // Only draw lines when they are actively linked in a combo
                        
                        // Determine whose link it is (player or AI) to set colors
                        let ownerClass = "";
