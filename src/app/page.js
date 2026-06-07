@@ -468,6 +468,41 @@ export default function Home() {
           </motion.div>
           <h1>CELESTIAL CYCLES</h1>
         </div>
+
+        {/* Center: Animated Moon Phase Cycle Row */}
+        <div className="header-moon-cycle-row">
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((phaseIdx) => {
+            const phaseMeta = PHASES[phaseIdx];
+            return (
+              <motion.div
+                key={phaseIdx}
+                className="header-cycle-moon"
+                animate={{
+                  scale: [1, 1.18, 1]
+                }}
+                whileHover={{
+                  scale: 1.35,
+                  y: -3,
+                  filter: "drop-shadow(0 0 15px rgba(249, 226, 175, 0.95))"
+                }}
+                transition={{
+                  y: { duration: 0.2, ease: "easeOut" },
+                  filter: { duration: 0.2, ease: "easeOut" },
+                  scale: {
+                    duration: 3.2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: phaseIdx * 0.25
+                  }
+                }}
+              >
+                <MoonSvg phaseId={phaseIdx} size={25} />
+                <div className="cycle-moon-tooltip">{phaseMeta?.name}</div>
+              </motion.div>
+            );
+          })}
+        </div>
+
         <div className="header-controls">
           <button className="icon-btn" onClick={handleToggleMute} title={muteSound ? "Unmute" : "Mute"}>
             {muteSound ? "🔇" : "🔊"}

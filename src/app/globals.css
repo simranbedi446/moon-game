@@ -1623,3 +1623,67 @@ body, html {
   color: var(--text-secondary);
 }
 
+/* Header Moon Cycle Row */
+.header-moon-cycle-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 480px; /* Cover more horizontal space */
+  background: rgba(13, 14, 28, 0.65); /* More premium, opaque glassmorphic backdrop */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 0.6rem 1.8rem;
+  border-radius: 30px; /* Smooth capsule border */
+  border: 1.5px solid rgba(249, 226, 175, 0.18); /* Warm gold tinted borders */
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(249, 226, 175, 0.04);
+  margin: 0 1.5rem;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.header-moon-cycle-row:hover {
+  border-color: rgba(203, 166, 247, 0.32); /* Transition to glowing purple border */
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 20px rgba(203, 166, 247, 0.12), inset 0 0 15px rgba(203, 166, 247, 0.04);
+}
+
+.header-cycle-moon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: help;
+}
+
+.cycle-moon-tooltip {
+  position: absolute;
+  bottom: -34px;
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: rgba(12, 13, 27, 0.95);
+  border: 1.2px solid rgba(249, 226, 175, 0.35);
+  color: #ffffff;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.6);
+  transition: opacity 0.2s cubic-bezier(0.165, 0.84, 0.44, 1), transform 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
+  z-index: 1000;
+}
+
+.header-cycle-moon:hover .cycle-moon-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0px);
+}
+
+@media (max-width: 768px) {
+  .header-moon-cycle-row {
+    display: none; /* Hide on mobile/tablet to avoid squeezing or wrapping */
+  }
+}
+
