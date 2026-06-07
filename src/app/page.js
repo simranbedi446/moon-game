@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { useGameEngine, PHASES } from "../hooks/useGameEngine";
+import { useGameEngine, PHASES, WILDCARDS } from "../hooks/useGameEngine";
 import soundSynth from "../utils/soundSynth";
 
 // High-fidelity SVG Moon Phase renderer
