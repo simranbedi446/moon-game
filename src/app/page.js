@@ -15,19 +15,19 @@ function MoonSvg({ phaseId, size = 60, glowColor = "rgba(249, 226, 175, 0.4)" })
       case 0: // New Moon
         return null;
       case 1: // Waxing Crescent (sliver on right)
-        return <path d={`M 20 2 A 18 18 0 0 1 20 38 A 11 18 0 0 1 20 2 Z`} fill="#f9e2af" filter="url(#glow)" />;
+        return <path d={`M 20 2 A 18 18 0 0 1 20 38 A 11 18 0 0 0 20 2 Z`} fill="#f9e2af" filter="url(#glow)" />;
       case 2: // First Quarter (right half lit)
         return <path d={`M 20 2 A 18 18 0 0 1 20 38 Z`} fill="#f9e2af" filter="url(#glow)" />;
       case 3: // Waxing Gibbous (mostly lit on right)
-        return <path d={`M 20 2 A 18 18 0 0 1 20 38 A 11 18 0 0 0 20 2 Z`} fill="#f9e2af" filter="url(#glow)" />;
+        return <path d={`M 20 2 A 18 18 0 0 1 20 38 A 11 18 0 0 1 20 2 Z`} fill="#f9e2af" filter="url(#glow)" />;
       case 4: // Full Moon
         return <circle cx={c} cy={c} r={r} fill="#f9e2af" filter="url(#glow)" />;
       case 5: // Waning Gibbous (mostly lit on left)
-        return <path d={`M 20 2 A 18 18 0 0 0 20 38 A 11 18 0 0 1 20 2 Z`} fill="#f9e2af" filter="url(#glow)" />;
+        return <path d={`M 20 2 A 18 18 0 0 0 20 38 A 11 18 0 0 0 20 2 Z`} fill="#f9e2af" filter="url(#glow)" />;
       case 6: // Last Quarter (left half lit)
         return <path d={`M 20 2 A 18 18 0 0 0 20 38 Z`} fill="#f9e2af" filter="url(#glow)" />;
       case 7: // Waning Crescent (sliver on left)
-        return <path d={`M 20 2 A 18 18 0 0 0 20 38 A 11 18 0 0 0 20 2 Z`} fill="#f9e2af" filter="url(#glow)" />;
+        return <path d={`M 20 2 A 18 18 0 0 0 20 38 A 11 18 0 0 1 20 2 Z`} fill="#f9e2af" filter="url(#glow)" />;
       default:
         return null;
     }
