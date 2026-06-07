@@ -245,72 +245,83 @@ export function useGameEngine() {
       }
     });
 
-    // 2. Check Cycles (Lines of 3 or more consecutive phases containing the placed card)
-    // Horizontal Line search (same row)
-    const rowCells = tempBoard.filter(cell => cell.row === placedRow && !cell.isBlocked).sort((a, b) => a.col - b.col);
-    checkCyclesInLine(rowCells, currentCell);
+    // 2. Check Cycles (Contiguous path of 3 or more consecutive phases containing the placed card)
+    const getNeighbors = (cell) => {
+      return tempBoard.filter(other => 
+        !other.isBlocked && 
+        other.card && 
+        Math.abs(other.row - cell.row) + Math.abs(other.col - cell.col) === 1
+      );
+    };
 
-    // Vertical Line search (same column)
-    const colCells = tempBoard.filter(cell => cell.col === placedCol && !cell.isBlocked).sort((a, b) => a.row - b.row);
-    checkCyclesInLine(colCells, currentCell);
-
-    function checkCyclesInLine(lineCells, centerCell) {
-      const centerIndex = lineCells.findIndex(cell => cell.id === centerCell.id);
-      if (centerIndex === -1) return;
-
-      const isAdjacentOnBoard = (cellA, cellB) => 
-        Math.abs(cellA.row - cellB.row) + Math.abs(cellA.col - cellB.col) === 1;
-
-      // Find the largest contiguous block of cells with cards around centerIndex
-      let startIdx = centerIndex;
-      while (startIdx > 0 && lineCells[startIdx - 1].card && isAdjacentOnBoard(lineCells[startIdx], lineCells[startIdx - 1])) {
-        startIdx--;
+    const findPaths = (currentCell, diff, visited) => {
+      const currentPhase = currentCell.card.phase;
+      const targetPhase = (currentPhase + diff + 8) % 8;
+      
+      const neighbors = getNeighbors(currentCell);
+      const validNeighbors = neighbors.filter(n => n.card.phase === targetPhase && !visited.has(n.id));
+      
+      if (validNeighbors.length === 0) {
+        return [[currentCell]];
       }
-      let endIdx = centerIndex;
-      while (endIdx < lineCells.length - 1 && lineCells[endIdx + 1].card && isAdjacentOnBoard(lineCells[endIdx], lineCells[endIdx + 1])) {
-        endIdx++;
-      }
+      
+      let paths = [];
+      validNeighbors.forEach(neighbor => {
+        const nextVisited = new Set(visited);
+        nextVisited.add(neighbor.id);
+        const subPaths = findPaths(neighbor, diff, nextVisited);
+        subPaths.forEach(sp => {
+          paths.push([currentCell, ...sp]);
+        });
+      });
+      
+      return paths;
+    };
 
-      const block = lineCells.slice(startIdx, endIdx + 1);
-      if (block.length < 3) return;
+    // Find all forward paths (+1 difference) and backward paths (-1 difference)
+    const forwardPaths = findPaths(currentCell, 1, new Set([currentCell.id]));
+    const backwardPaths = findPaths(currentCell, -1, new Set([currentCell.id]));
 
-      // Now look for consecutive runs of length >= 3 in this block that contain the centerCell
-      // Since it's a small board, we can check all subsegments containing centerCell
-      const centerInBlockIdx = block.findIndex(cell => cell.id === centerCell.id);
-      let longestRun = [];
+    let foundCycles = [];
 
-      for (let i = 0; i <= centerInBlockIdx; i++) {
-        for (let j = centerInBlockIdx; j < block.length; j++) {
-          const runLength = j - i + 1;
-          if (runLength >= 3) {
-            const sub = block.slice(i, j + 1);
-            
-            // Check if sub is consecutive forward or backward
-            let isForward = true;
-            let isBackward = true;
-            
-            for (let k = 0; k < sub.length - 1; k++) {
-              const p1 = sub[k].card.phase;
-              const p2 = sub[k+1].card.phase;
-              
-              // Forward direction test (e.g. 0 -> 1 -> 2)
-              if ((p1 + 1) % 8 !== p2) isForward = false;
-              // Backward direction test (e.g. 2 -> 1 -> 0)
-              if ((p1 - 1 + 8) % 8 !== p2) isBackward = false;
-            }
-
-            if ((isForward || isBackward) && runLength > longestRun.length) {
-              longestRun = sub;
-            }
+    // Combine all non-overlapping forward and backward path pairs
+    forwardPaths.forEach(F => {
+      backwardPaths.forEach(B => {
+        // Check if they share any cells other than currentCell
+        const sharesOtherCell = F.some((cell, idx) => idx > 0 && B.some(bCell => bCell.id === cell.id));
+        if (!sharesOtherCell) {
+          const combined = [...B.slice(1).reverse(), ...F];
+          if (combined.length >= 3) {
+            foundCycles.push(combined);
           }
         }
-      }
+      });
+    });
 
-      if (longestRun.length >= 3) {
-        // Score is 1 point per card in sequence
-        registerCombo("cycle", longestRun, longestRun.length);
+    // Filter to keep only maximal cycles (cycles that are not subsets of any other cycle)
+    let maximalCycles = [];
+    foundCycles.forEach(cycle => {
+      const isSubset = foundCycles.some(other => {
+        if (other.length <= cycle.length) return false;
+        // Check if all cells of cycle are present in other
+        return cycle.every(cell => other.some(otherCell => otherCell.id === cell.id));
+      });
+      if (!isSubset) {
+        // Avoid duplicate paths (with same set of cell IDs)
+        const isDuplicate = maximalCycles.some(other => 
+          other.length === cycle.length && 
+          cycle.every(cell => other.some(otherCell => otherCell.id === cell.id))
+        );
+        if (!isDuplicate) {
+          maximalCycles.push(cycle);
+        }
       }
-    }
+    });
+
+    // Register each found cycle
+    maximalCycles.forEach(cycle => {
+      registerCombo("cycle", cycle, cycle.length);
+    });
 
     return {
       combos,
