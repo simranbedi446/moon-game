@@ -31,22 +31,18 @@ function generateGrid(level) {
       }
     }
   } else if (level === 2) {
-    // 4x4 Grid with corner blocks (12 playable cells)
+    // 4x4 Grid (16 playable cells)
     for (let r = 0; r < 4; r++) {
       for (let c = 0; c < 4; c++) {
-        const isCorner = (r === 0 || r === 3) && (c === 0 || c === 3);
-        grid.push({ id: `cell-${r}-${c}`, row: r, col: c, isBlocked: isCorner, card: null });
+        grid.push({ id: `cell-${r}-${c}`, row: r, col: c, isBlocked: false, card: null });
       }
     }
   } else if (level === 3) {
-    // 5x5 Grid with custom cross block pattern (16 playable cells)
+    // 5x5 Grid with corner blocks (21 playable cells)
     for (let r = 0; r < 5; r++) {
       for (let c = 0; c < 5; c++) {
         const isCorner = (r === 0 || r === 4) && (c === 0 || c === 4);
-        const isCenter = r === 2 && c === 2;
-        const isInnerCorner = (r === 1 || r === 3) && (c === 1 || c === 3); // creates a hollow ring
-        const isBlocked = isCorner || isCenter || isInnerCorner;
-        grid.push({ id: `cell-${r}-${c}`, row: r, col: c, isBlocked, card: null });
+        grid.push({ id: `cell-${r}-${c}`, row: r, col: c, isBlocked: isCorner, card: null });
       }
     }
   }

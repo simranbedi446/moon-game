@@ -359,13 +359,13 @@ export default function Home() {
               </div>
               <div className="level-node" onClick={() => startLevel(2)}>
                 <div className="node-icon">🌗</div>
-                <h3>Orbit II: Gibbous Ring</h3>
-                <span className="difficulty-tag medium">Medium (4x4, Corners Blocked)</span>
+                <h3>Orbit II: Gibbous</h3>
+                <span className="difficulty-tag medium">Medium (4x4 Grid)</span>
               </div>
               <div className="level-node" onClick={() => startLevel(3)}>
                 <div className="node-icon">🌕</div>
-                <h3>Orbit III: Eclipse Cross</h3>
-                <span className="difficulty-tag hard">Hard (5x5, Hollow Pattern)</span>
+                <h3>Orbit III: Eclipse</h3>
+                <span className="difficulty-tag hard">Hard (5x5, Corners Blocked)</span>
               </div>
             </div>
             <button className="secondary-btn mt-6" onClick={goToMenu}>
