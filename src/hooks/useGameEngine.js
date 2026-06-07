@@ -576,6 +576,7 @@ export function useGameEngine() {
     // Check if board is full (round end)
     const isBoardFull = board.length > 0 && board.filter(c => !c.isBlocked && !c.card).length === 0;
     if (isBoardFull) {
+      if (isAnimating) return; // Wait for animations/scoring to finish so final points are counted!
       handleRoundEnd();
       return;
     }
@@ -585,7 +586,7 @@ export function useGameEngine() {
     } else {
       setAiFace("sleeping");
     }
-  }, [turn, gameStage, board]);
+  }, [turn, gameStage, board, isAnimating]);
 
   // Score the final cards on board and transition to round-end stage
   const handleRoundEnd = () => {
