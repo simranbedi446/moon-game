@@ -4,10 +4,10 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useGameEngine, PHASES, WILDCARDS } from "../hooks/useGameEngine";
 import soundSynth from "../utils/soundSynth";
 
-const orbitNames = {
-  1: "Orbit I: Crescent",
-  2: "Orbit II: Gibbous",
-  3: "Orbit III: Eclipse"
+const phaseNames = {
+  1: "Phase I: Crescent",
+  2: "Phase II: Gibbous",
+  3: "Phase III: Eclipse"
 };
 
 // High-fidelity SVG Moon Phase renderer
@@ -350,7 +350,7 @@ export default function Home() {
             </div>
             <h2>Rise of the Lunar Grid</h2>
             <p className="menu-tagline">
-              Strategically place lunar phases, align cosmic cycles, outsmart the Half Moon AI, and command wildcards.
+              Strategically place lunar phases and defeat the Half Moon AI across 3 progressive campaign Phases—each containing 3 grid Levels to conquer.
             </p>
             <div className="menu-actions">
               <button className="primary-btn glow-gold-btn" onClick={startNewLevelProgression}>
@@ -368,8 +368,7 @@ export default function Home() {
           <div className="tutorial-view glass-panel max-width-container">
             <h2>The Celestial Rules</h2>
             <p className="intro-text">
-              Compete against the AI (The Half Moon) by placing cards from your hand onto the cosmic grid. 
-              Earn points immediately by forming combinations, and flip the board tiles to your color!
+              Compete against the AI (The Half Moon) across 3 progressive Phases (Crescent, Gibbous, Eclipse). In each Phase, you must play and win 3 different grid layouts (Levels 1, 2, and 3) to advance!
             </p>
 
             <div className="rules-grid">
@@ -460,7 +459,9 @@ export default function Home() {
               {/* Board Center Container */}
               <div className="board-center">
                 <div className="orbit-header-panel">
-                  <span className="orbit-name">{orbitNames[level] || `Orbit ${level}`}</span>
+                  <span className="orbit-name">
+                    {phaseNames[level] || `Phase ${level}`} • Level {gamesWon + 1} / 3
+                  </span>
                   {renderProgressDots(gamesWon)}
                 </div>
 
@@ -696,8 +697,8 @@ export default function Home() {
               <h3>Orbit Alignment Summary</h3>
               <div className="breakdown-table">
                 <div className="table-row">
-                  <span>Current Orbit:</span>
-                  <strong>{orbitNames[level]}</strong>
+                  <span>Current Phase:</span>
+                  <strong>{phaseNames[level]}</strong>
                 </div>
                 <div className="table-row">
                   <span>Combo Alignments:</span>
@@ -721,8 +722,11 @@ export default function Home() {
                   </strong>
                 </div>
                 <div className="table-row progression-row">
-                  <span>Orbit Progress:</span>
-                  {renderProgressDots(gamesWon)}
+                  <span>Phase Progress:</span>
+                  <div className="progression-indicator-wrapper">
+                    <span className="progression-text">{gamesWon === 3 ? "Cleared! 🎉" : `${gamesWon} / 3 Levels Completed`}</span>
+                    {renderProgressDots(gamesWon)}
+                  </div>
                 </div>
               </div>
               
