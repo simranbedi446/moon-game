@@ -326,7 +326,18 @@ export default function Home() {
                   <span className="dot player-dot">Player</span>
                   <span className="dot ai-dot">AI</span>
                 </div>
-              </div>
+            </div>
+          </div>
+
+          <div className="lunar-fact-box mt-6">
+              <h3>Did You Know? 🌓</h3>
+              <p>
+                The half moon is scientifically known as the <strong>Quarter moon</strong>. People casually refer to the 
+                Quarter moon as half moon because it appears like half the moon is present but, in fact, only a quarter of the moon is illuminated.
+              </p>
+              <p className="mt-2">
+                Following the first Quarter moon, the moon enters its Waxing Gibbous phase, becoming brighter and brighter until the next full moon. And following the last Quarter moon, the moon enters its Waning Crescent phase, darkening into a New moon.
+              </p>
             </div>
 
             <button className="primary-btn mt-6" onClick={goToMenu}>

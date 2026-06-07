@@ -1160,3 +1160,28 @@ body, html {
   box-shadow: none !important;
   transform: none !important;
 }
+
+.lunar-fact-box {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: left;
+  line-height: 1.6;
+  width: 100%;
+}
+
+.lunar-fact-box h3 {
+  font-size: 1.25rem;
+  color: var(--ai-color);
+  margin-bottom: 0.5rem;
+}
+
+.lunar-fact-box p {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
